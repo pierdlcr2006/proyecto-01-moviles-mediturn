@@ -90,6 +90,8 @@ Además, se creó el **repositorio** y se avanzó en el **diseño del prototipo 
 **Inicio**, **Búsqueda**, **Detalle del Médico**, **Agendar Cita**, **Mis Citas** y **Perfil**.
 
 
+
+
 ## Día 2 – Configuración del Proyecto y Estructura Base
 
 ### Objetivo del día
@@ -118,6 +120,8 @@ Se organizaron las ramas de trabajo por integrante y se aplicaron convenciones d
 - Modelos: `Doctor`, `Slot`, `Appointment`, `Patient`  
 - Repositorio local con datos simulados (JSON o DataSource)  
 - Funciones: búsqueda, filtrado y gestión de citas
+
+
 
 
 ## DÍA 3 – Desarrollo de Interfaz (UI/UX)
