@@ -168,6 +168,74 @@ Interfaz completa navegable entre pantallas principales.
 
 Implementación visual basada en el diseño de Figma.
 
+--
+--
+
+## DÍA 4 – Lógica y Datos Simulados
+🎯 Objetivo
+
+Conectar la interfaz de usuario con modelos y repositorios locales, simulando la gestión de datos de doctores, citas y pacientes para validar el flujo funcional de la aplicación.
+
+🧩 Descripción del trabajo realizado
+
+Durante esta etapa se integró la lógica interna del proyecto con la interfaz desarrollada previamente.
+Se crearon los modelos de datos principales y un repositorio local con información simulada, permitiendo probar la funcionalidad general de búsqueda y reserva sin necesidad de conexión a una base de datos real.
+
+Modelos definidos:
+
+Doctor → información del médico (nombre, especialidad, ciudad, teleconsulta).
+
+Slot → horarios disponibles del doctor.
+
+Appointment → datos de las citas (paciente, fecha, hora, motivo).
+
+Patient → información básica del usuario/paciente.
+
+Principales implementaciones:
+
+Creación de un repositorio local mediante una fuente de datos (DataSource) o estructura JSON embebida.
+
+Conexión del repositorio con las pantallas de UI mediante funciones que proveen los datos simulados.
+
+Implementación de búsqueda dinámica por nombre y especialidad, actualizando los resultados en tiempo real.
+
+Simulación del flujo completo de reserva de cita, desde la selección del médico hasta la confirmación del turno.
+
+💡 Esta etapa permitió validar el comportamiento funcional de la aplicación sin necesidad de usar bases de datos externas ni backend.
+
+--
+
+🧪 Pruebas y validaciones (Testing)
+
+Para garantizar la correcta integración de la lógica con la interfaz, se realizaron pruebas manuales y funcionales enfocadas en los siguientes aspectos:
+
+Carga correcta de datos desde el repositorio local.
+
+Funcionamiento del buscador por nombre y especialidad.
+
+Fluidez del flujo de reserva de citas simuladas.
+
+Comprobación del manejo básico de estados (por ejemplo, citas pendientes o confirmadas).
+
+Navegación coherente entre pantallas de detalle y reserva.
+
+Los tests confirmaron que el sistema responde correctamente a las búsquedas y mantiene la coherencia entre los datos simulados y la interfaz.
+
+📦 Entregables
+
+Modelos de datos implementados (Doctor, Slot, Appointment, Patient).
+
+Repositorio local con datos simulados.
+
+Búsqueda funcional por especialidad y nombre.
+
+Flujo completo de reserva de cita simulada.
+
+✅ RESULTADO DEL DÍA
+
+Se logró conectar la interfaz con la capa de datos locales, obteniendo una aplicación funcional con flujo completo de reserva y búsqueda operativa mediante información simulada.
+La app ya permite navegar, buscar médicos y reservar citas de manera fluida, sirviendo como base para futuras integraciones con una base de datos real o backend.
+
 Aplicación con estructura Material 3 sin conexión a datos reales.
 
 ✅ RESULTADO DEL DÍA
