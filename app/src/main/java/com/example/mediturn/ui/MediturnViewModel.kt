@@ -16,7 +16,9 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class MediturnViewModel(
     private val repository: MediturnRepository
 ) : ViewModel() {
@@ -124,6 +126,25 @@ class MediturnViewModel(
         val patientId = activePatient.value?.id ?: return
         viewModelScope.launch {
             repository.markAllNotificationsAsRead(patientId)
+        }
+    }
+
+    fun updatePatientProfile(
+        fullName: String,
+        email: String,
+        phone: String,
+        address: String
+    ) {
+        val currentPatient = activePatient.value ?: return
+        viewModelScope.launch {
+            repository.updatePatient(
+                currentPatient.copy(
+                    fullName = fullName,
+                    email = email,
+                    phone = phone,
+                    address = address
+                )
+            )
         }
     }
 }

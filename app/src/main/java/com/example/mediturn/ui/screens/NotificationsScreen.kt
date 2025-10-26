@@ -1,97 +1,58 @@
 package com.example.mediturn.ui.screens
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
+import com.example.mediturn.data.model.Notification
+import com.example.mediturn.ui.MediturnViewModel
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 
-// Data class para notificaciones
-data class NotificationData(
-    val id: String,
-    val title: String,
-    val time: String,
-    val type: NotificationType,
-    val isRead: Boolean = false
-)
-
-enum class NotificationType {
-    APPOINTMENT, // Cita con doctor
-    REMINDER,    // Recordatorio de medicamento
-    FOLLOWUP     // Consulta de seguimiento
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun NotificationsScreen(navController: NavController) {
-    // TODO: Obtener notificaciones reales desde ViewModel
-    var notifications by remember {
-        mutableStateOf(
-            listOf(
-                NotificationData(
-                    id = "1",
-                    title = "Cita con Dr. Ramírez mañana a las 10:00 a.m.",
-                    time = "Hace 2 horas",
-                    type = NotificationType.APPOINTMENT,
-                    isRead = false
-                ),
-                NotificationData(
-                    id = "2",
-                    title = "Recordatorio: Tomar medicamento Losartán 50mg",
-                    time = "Hace 4 horas",
-                    type = NotificationType.REMINDER,
-                    isRead = false
-                ),
-                NotificationData(
-                    id = "3",
-                    title = "Consulta de seguimiento con Dra. González el viernes",
-                    time = "Ayer",
-                    type = NotificationType.FOLLOWUP,
-                    isRead = true
-                ),
-                NotificationData(
-                    id = "4",
-                    title = "Consulta de seguimiento con Dra. González el viernes",
-                    time = "Ayer",
-                    type = NotificationType.FOLLOWUP,
-                    isRead = true
-                ),
-                NotificationData(
-                    id = "5",
-                    title = "Consulta de seguimiento con Dra. González el viernes",
-                    time = "Ayer",
-                    type = NotificationType.FOLLOWUP,
-                    isRead = true
-                ),
-                NotificationData(
-                    id = "6",
-                    title = "Consulta de seguimiento con Dra. González el viernes",
-                    time = "Ayer",
-                    type = NotificationType.FOLLOWUP,
-                    isRead = true
-                ),
-                NotificationData(
-                    id = "7",
-                    title = "Cita con Dr. Ramírez mañana a las 10:00 a.m.",
-                    time = "Hace 2 horas",
-                    type = NotificationType.APPOINTMENT,
-                    isRead = true
-                )
-            )
-        )
+@OptIn(ExperimentalMaterial3Api::class)
+fun NotificationsScreen(
+    navController: NavController,
+    viewModel: MediturnViewModel
+) {
+    val notifications by viewModel.notifications.collectAsStateWithLifecycle()
+
+    LaunchedEffect(Unit) {
+        viewModel.markAllNotificationsAsRead()
     }
 
     Column(
@@ -99,7 +60,6 @@ fun NotificationsScreen(navController: NavController) {
             .fillMaxSize()
             .background(Color(0xFFFAFAFA))
     ) {
-        // Header
         TopAppBar(
             title = {
                 Text(
@@ -118,145 +78,115 @@ fun NotificationsScreen(navController: NavController) {
                     )
                 }
             },
-            colors = TopAppBarDefaults.topAppBarColors(
-                containerColor = Color.White
-            )
+            actions = {
+                if (notifications.isNotEmpty()) {
+                    TextButton(onClick = { viewModel.markAllNotificationsAsRead() }) {
+                        Text(text = "Marcar leídas", color = MaterialTheme.colorScheme.primary)
+                    }
+                }
+            },
+            colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
         )
 
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 20.dp)
-        ) {
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Botón "Marcar todas como leídas"
-            Button(
-                onClick = {
-                    notifications = notifications.map { it.copy(isRead = true) }
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(48.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF00BCD4)
-                ),
-                shape = RoundedCornerShape(12.dp)
-            ) {
-                Text(
-                    text = "Marcar todas como leídas",
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.Medium
-                )
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Lista de notificaciones
+        if (notifications.isEmpty()) {
+            EmptyNotifications()
+        } else {
             LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 20.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                items(notifications) { notification ->
-                    NotificationItem(
+                items(notifications.sortedByDescending { it.createdAt }) { notification ->
+                    NotificationCard(
                         notification = notification,
-                        onNotificationClick = {
-                            // TODO: Navegar al detalle o marcar como leída
-                            notifications = notifications.map {
-                                if (it.id == notification.id) it.copy(isRead = true) else it
-                            }
-                        }
+                        onMarkAsRead = { viewModel.markNotificationAsRead(notification.id) }
                     )
                 }
-                
-                item {
-                    Spacer(modifier = Modifier.height(16.dp))
-                }
+
+                item { Spacer(modifier = Modifier.height(80.dp)) }
             }
         }
     }
 }
 
 @Composable
-fun NotificationItem(
-    notification: NotificationData,
-    onNotificationClick: () -> Unit
+private fun NotificationCard(
+    notification: Notification,
+    onMarkAsRead: () -> Unit
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
-            containerColor = Color.White
+            containerColor = if (notification.isRead) Color.White else Color(0xFFE8F5E9)
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        onClick = onNotificationClick
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            // Ícono según el tipo de notificación
-            Box(
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(CircleShape)
-                    .background(
-                        when (notification.type) {
-                            NotificationType.APPOINTMENT -> Color(0xFFB2EBF2)
-                            NotificationType.REMINDER -> Color(0xFFFFE0B2)
-                            NotificationType.FOLLOWUP -> Color(0xFFBBDEFB)
-                        }
-                    ),
-                contentAlignment = Alignment.Center
-            ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
-                    imageVector = when (notification.type) {
-                        NotificationType.APPOINTMENT -> Icons.Filled.CalendarToday
-                        NotificationType.REMINDER -> Icons.Filled.MedicalServices
-                        NotificationType.FOLLOWUP -> Icons.Filled.Person
-                    },
+                    imageVector = Icons.Filled.Notifications,
                     contentDescription = null,
-                    tint = when (notification.type) {
-                        NotificationType.APPOINTMENT -> Color(0xFF00BCD4)
-                        NotificationType.REMINDER -> Color(0xFFFF9800)
-                        NotificationType.FOLLOWUP -> Color(0xFF2196F3)
-                    },
-                    modifier = Modifier.size(20.dp)
+                    tint = MaterialTheme.colorScheme.primary
                 )
+                Spacer(modifier = Modifier.width(12.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = notification.title,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF212121)
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = formatNotificationDate(notification.createdAt),
+                        fontSize = 12.sp,
+                        color = Color(0xFF757575)
+                    )
+                }
+                if (!notification.isRead) {
+                    TextButton(onClick = onMarkAsRead) {
+                        Text(text = "Marcar leída", fontSize = 12.sp)
+                    }
+                }
             }
 
-            Spacer(modifier = Modifier.width(12.dp))
-
-            // Texto de la notificación
-            Column(
-                modifier = Modifier.weight(1f)
-            ) {
-                Text(
-                    text = notification.title,
-                    fontSize = 14.sp,
-                    fontWeight = if (notification.isRead) FontWeight.Normal else FontWeight.SemiBold,
-                    color = Color(0xFF212121),
-                    lineHeight = 20.sp
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = notification.time,
-                    fontSize = 12.sp,
-                    color = Color(0xFF9E9E9E)
-                )
-            }
-
-            // Indicador de no leída
-            if (!notification.isRead) {
-                Box(
-                    modifier = Modifier
-                        .size(10.dp)
-                        .clip(CircleShape)
-                        .background(Color(0xFF00BCD4))
-                )
-            }
+            Spacer(modifier = Modifier.height(12.dp))
+            Text(
+                text = notification.message,
+                fontSize = 14.sp,
+                color = Color(0xFF424242)
+            )
         }
     }
+}
+
+@Composable
+private fun EmptyNotifications() {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(32.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Text(
+            text = "No tienes notificaciones",
+            fontSize = 18.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = MaterialTheme.colorScheme.primary
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = "Te avisaremos cuando haya algo nuevo.",
+            fontSize = 14.sp,
+            color = Color(0xFF757575)
+        )
+    }
+}
+
+private fun formatNotificationDate(timestamp: Long): String {
+    val formatter = DateTimeFormatter.ofPattern("dd MMM yyyy • hh:mm a")
+    return Instant.ofEpochMilli(timestamp).atZone(ZoneId.systemDefault()).format(formatter)
 }

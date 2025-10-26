@@ -61,6 +61,10 @@ class MediturnRepository(
 
     fun observeSpecialties(): Flow<List<EspecialityEntity>> = specialtyDao.observeSpecialties()
 
+    suspend fun updatePatient(patient: PatientEntity) = withContext(dispatcher) {
+        patientDao.update(patient)
+    }
+
     fun observeDoctors(): Flow<List<DoctorEntity>> = doctorDao.observeDoctors()
 
     fun observeDoctor(doctorId: Long): Flow<DoctorEntity?> = doctorDao.observeById(doctorId)
