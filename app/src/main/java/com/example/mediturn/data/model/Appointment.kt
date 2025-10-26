@@ -14,7 +14,7 @@ import androidx.room.PrimaryKey
             onDelete = ForeignKey.CASCADE
         ),
         ForeignKey(
-            entity = Patient::class,
+            entity = PatientEntity::class,
             parentColumns = ["id"],
             childColumns = ["patientId"],
             onDelete = ForeignKey.CASCADE
@@ -22,10 +22,10 @@ import androidx.room.PrimaryKey
     ]
 )
 data class Appointment(
-    @PrimaryKey
-    val id: String,
-    val doctorId: String,
-    val patientId: String,
+    @PrimaryKey(autoGenerate = true)
+    val id: Long = 0L,
+    val doctorId: Long,
+    val patientId: Long,
     val dateTime: Long, // Timestamp en milisegundos
     val status: AppointmentStatus,
     val isPast: Boolean

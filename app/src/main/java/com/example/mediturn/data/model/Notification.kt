@@ -1,24 +1,33 @@
 package com.example.mediturn.data.model
 
-
 import androidx.room.Entity
+import androidx.room.ForeignKey
 import androidx.room.PrimaryKey
 
-@Entity(tableName = "notifications")
+@Entity(
+    tableName = "notifications",
+    foreignKeys = [
+        ForeignKey(
+            entity = PatientEntity::class,
+            parentColumns = ["id"],
+            childColumns = ["patientId"],
+            onDelete = ForeignKey.CASCADE
+        ),
+        ForeignKey(
+            entity = DoctorEntity::class,
+            parentColumns = ["id"],
+            childColumns = ["doctorId"],
+            onDelete = ForeignKey.CASCADE
+        )
+    ]
+)
 data class Notification(
-    @PrimaryKey
-    val id: String,
+    @PrimaryKey(autoGenerate = true)
+    val id: Long = 0L,
+    val patientId: Long?,
+    val doctorId: Long?,
     val title: String,
     val message: String,
-    val timestamp: Long, // Timestamp en milisegundos
-    val isRead: Boolean,
-    val type: NotificationType
+    val createdAt: Long,
+    val isRead: Boolean = false
 )
-
-enum class NotificationType {
-    APPOINTMENT,
-    REMINDER,
-    CANCELLATION,
-    CONFIRMATION,
-    GENERAL
-}

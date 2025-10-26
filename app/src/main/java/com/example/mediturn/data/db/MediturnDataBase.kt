@@ -4,11 +4,22 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
-import com.example.mediturn.data.model.*
+import androidx.room.TypeConverters
+import com.example.mediturn.data.dao.AppointmentDao
+import com.example.mediturn.data.dao.DoctorDao
+import com.example.mediturn.data.dao.NotificationDao
+import com.example.mediturn.data.dao.PatientDao
+import com.example.mediturn.data.dao.SpecialtyDao
+import com.example.mediturn.data.model.Appointment
+import com.example.mediturn.data.model.DoctorEntity
+import com.example.mediturn.data.model.EspecialityEntity
+import com.example.mediturn.data.model.Notification
+import com.example.mediturn.data.model.PatientEntity
+import com.example.mediturn.data.model.converters.MediturnTypeConverters
 
 @Database(
     entities = [
-        Patient::class,
+        PatientEntity::class,
         DoctorEntity::class,
         EspecialityEntity::class,
         Appointment::class,
@@ -17,8 +28,14 @@ import com.example.mediturn.data.model.*
     version = 1,
     exportSchema = false
 )
+@TypeConverters(MediturnTypeConverters::class)
 abstract class MediturnDataBase : RoomDatabase() {
 
+    abstract fun patientDao(): PatientDao
+    abstract fun doctorDao(): DoctorDao
+    abstract fun specialtyDao(): SpecialtyDao
+    abstract fun appointmentDao(): AppointmentDao
+    abstract fun notificationDao(): NotificationDao
     
     companion object {
         @Volatile

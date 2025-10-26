@@ -1,5 +1,6 @@
 package com.example.mediturn.data.model
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.PrimaryKey
@@ -17,10 +18,11 @@ import androidx.room.PrimaryKey
     ]
 )
 data class DoctorEntity(
-    @PrimaryKey
-    val id: String,
-    val fullName: String,
-    val specialtyId: String,
+    @PrimaryKey(autoGenerate = true)
+    val id: Long = 0L,
+    val name: String,
+    val lastname: String,
+    val specialtyId: Long,
     val hospital: String,
     val location: String,
     val rating: Double,
@@ -28,31 +30,15 @@ data class DoctorEntity(
     val about: String,
     val phone: String,
     val availability: List<DayAvailability>,
+    val timeSlot: List<TimeSlot>,
     val hasTeleconsultation: Boolean
 )
-
-data class DayAvailability(
-    val day: DayOfWeek,
-    val startTime: String, // e.g., "09:00" formato 24h
-    val endTime: String // e.g., "17:00" formato 24h
-)
-
-enum class DayOfWeek {
-    MONDAY,
-    TUESDAY,
-    WEDNESDAY,
-    THURSDAY,
-    FRIDAY,
-    SATURDAY,
-    SUNDAY;
-    
-    fun toSpanish(): String = when(this) {
-        MONDAY -> "Lunes"
-        TUESDAY -> "Martes"
-        WEDNESDAY -> "Miércoles"
-        THURSDAY -> "Jueves"
-        FRIDAY -> "Viernes"
-        SATURDAY -> "Sábado"
-        SUNDAY -> "Domingo"
-    }
+enum class DayAvailability{
+    LUNES,
+    MARTES,
+    MIERCOLES,
+    JUEVES,
+    VIERNES,
+    SABADO,
+    DOMINGO
 }
