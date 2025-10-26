@@ -1,7 +1,9 @@
 package com.example.mediturn.navigation
 
+import androidx.compose.ui.graphics.vector.ImageVector
+
 data class BottomNavItem(
     val title: String,
     val route: String,
-    val icon: String // Usaremos texto simple por ahora, luego se puede cambiar a iconos
+    val icon: ImageVector
 )

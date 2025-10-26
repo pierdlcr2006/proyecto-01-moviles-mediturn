@@ -19,36 +19,40 @@ fun NavGraph(navController: NavHostController) {
         composable(Destination.HOME) {
             HomeScreen()
         }
-        
+
         composable(Destination.SEARCH) {
-            SearchScreen()
+            SearchScreen(navController = navController)
         }
-        
+
         composable(Destination.APPOINTMENTS) {
-            AppointmentsScreen()
+            AppointmentsScreen(navController = navController)
         }
-        
+
         composable(Destination.PROFILE) {
-            ProfileScreen()
+            ProfileScreen(navController = navController)
         }
-        
+
         // Pantallas secundarias
         composable(
             route = Destination.DOCTOR_DETAIL,
             arguments = listOf(navArgument("doctorId") { type = NavType.StringType })
         ) { backStackEntry ->
             val doctorId = backStackEntry.arguments?.getString("doctorId") ?: ""
-            DoctorDetailScreen(doctorId = doctorId)
+            DoctorDetailScreen(navController = navController, doctorId = doctorId)
         }
-        
+
         composable(
             route = Destination.SCHEDULE_APPOINTMENT,
             arguments = listOf(navArgument("doctorId") { type = NavType.StringType })
         ) { backStackEntry ->
             val doctorId = backStackEntry.arguments?.getString("doctorId") ?: ""
-            ScheduleAppointmentScreen(doctorId = doctorId)
+            ScheduleAppointmentScreen(navController = navController, doctorId = doctorId)
         }
-        
+
+        composable(Destination.EDIT_PROFILE) {
+            EditProfileScreen(navController = navController)
+        }
+
         composable(Destination.NOTIFICATIONS) {
             NotificationsScreen()
         }
