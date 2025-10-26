@@ -21,13 +21,15 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
+import com.example.mediturn.util.Destination
 import com.google.accompanist.pager.*
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.yield
 
 @OptIn(ExperimentalPagerApi::class)
 @Composable
-fun HomeScreen() {
+fun HomeScreen(navController: NavController) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -35,7 +37,7 @@ fun HomeScreen() {
             .verticalScroll(rememberScrollState())
     ) {
         // Header con título
-        HeaderSection()
+        HeaderSection(navController = navController)
         
         // Tarjeta de Especialidades
         EspecialidadesCard()
@@ -54,7 +56,7 @@ fun HomeScreen() {
 }
 
 @Composable
-fun HeaderSection() {
+fun HeaderSection(navController: NavController) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -96,21 +98,25 @@ fun HeaderSection() {
                 )
             }
             
-            // Ícono de notificación con badge
-            BadgedBox(
-                badge = {
-                    Badge(
-                        containerColor = Color(0xFFFF3D00),
-                        modifier = Modifier.size(8.dp)
+            // Ícono de notificación con badge (clickeable)
+            IconButton(
+                onClick = { navController.navigate(Destination.NOTIFICATIONS) }
+            ) {
+                BadgedBox(
+                    badge = {
+                        Badge(
+                            containerColor = Color(0xFFFF3D00),
+                            modifier = Modifier.size(8.dp)
+                        )
+                    }
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Notifications,
+                        contentDescription = "Notificaciones",
+                        tint = Color(0xFF757575),
+                        modifier = Modifier.size(28.dp)
                     )
                 }
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.Notifications,
-                    contentDescription = "Notificaciones",
-                    tint = Color(0xFF757575),
-                    modifier = Modifier.size(28.dp)
-                )
             }
         }
     }

@@ -17,7 +17,7 @@ fun NavGraph(navController: NavHostController) {
     ) {
         // Pantallas principales con BottomBar
         composable(Destination.HOME) {
-            HomeScreen()
+            HomeScreen(navController = navController)
         }
 
         composable(Destination.SEARCH) {
@@ -54,7 +54,7 @@ fun NavGraph(navController: NavHostController) {
         }
 
         composable(Destination.NOTIFICATIONS) {
-            NotificationsScreen()
+            NotificationsScreen(navController = navController)
         }
     }
 }
