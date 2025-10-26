@@ -19,6 +19,7 @@ import com.example.mediturn.ui.theme.MediTurnTheme
 import com.example.mediturn.util.Destination
 import androidx.compose.runtime.Composable
 
+
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
