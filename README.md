@@ -118,3 +118,54 @@ Se organizaron las ramas de trabajo por integrante y se aplicaron convenciones d
 - Modelos: `Doctor`, `Slot`, `Appointment`, `Patient`  
 - Repositorio local con datos simulados (JSON o DataSource)  
 - Funciones: búsqueda, filtrado y gestión de citas
+
+
+## DÍA 3 – Desarrollo de Interfaz (UI/UX)
+🧭 Objetivo
+
+Implementar la interfaz de usuario conforme al prototipo visual elaborado en Figma, aplicando los lineamientos de Material Design 3 para garantizar coherencia, accesibilidad y una experiencia moderna.
+
+🧩 Descripción del trabajo realizado
+
+Durante esta jornada se implementaron las pantallas principales del proyecto MediTurn, trasladando el diseño creado en Figma al entorno real del proyecto desarrollado con Kotlin y Jetpack Compose.
+Se utilizaron componentes nativos de Compose y principios de diseño responsivo para mantener fidelidad con el prototipo visual, asegurando una navegación fluida entre vistas.
+
+Pantallas desarrolladas:
+
+Home: contiene el buscador principal y accesos directos a Especialidades, Mis Citas y Perfil.
+
+Listado de Médicos: implementado con LazyColumn y Card para mostrar datos básicos de cada médico.
+
+Detalle de Médico: muestra información del doctor, su disponibilidad y opción de teleconsulta.
+
+Agendar Cita: formulario con selector de fecha, hora y motivo de la cita.
+
+Mis Citas / Calendario: permite visualizar citas próximas y pasadas.
+
+Estilo global: se aplicó Material Design 3 para lograr una apariencia moderna y consistente.
+
+💡 El diseño final del Figma se implementó fielmente en Compose, respetando colores, tipografía y jerarquía visual definidos en el prototipo.
+
+🧪 Pruebas y validaciones (Testing)
+
+Como parte del control de calidad, se realizaron pruebas funcionales y visuales para asegurar la correcta interacción y consistencia del diseño:
+
+Verificación de la navegación entre pantallas utilizando Navigation Compose.
+
+Comprobación del funcionamiento de botones y buscador.
+
+Validación del alineado, espaciado y tipografía según el diseño de Figma.
+
+No se detectaron errores funcionales relevantes; únicamente se realizaron pequeños ajustes de margen y espaciado en la pantalla Home.
+
+📦 Entregables
+
+Interfaz completa navegable entre pantallas principales.
+
+Implementación visual basada en el diseño de Figma.
+
+Aplicación con estructura Material 3 sin conexión a datos reales.
+
+✅ RESULTADO DEL DÍA
+
+Se completó la construcción de todas las pantallas principales y su navegación, logrando una interfaz totalmente navegable, fiel al diseño de Figma y visualmente coherente con los lineamientos de Material Design 3.
