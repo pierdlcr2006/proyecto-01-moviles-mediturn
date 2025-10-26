@@ -68,4 +68,14 @@ dependencies {
 //  Kotlin Coroutines (Room)
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2")
+
+    //navigation
+    implementation("androidx.navigation:navigation-compose:2.8.3")
+    
+    // Material Icons Extended
+    implementation("androidx.compose.material:material-icons-extended:1.7.6")
+
+    // Accompanist Pager para carrusel
+    implementation("com.google.accompanist:accompanist-pager:0.36.0")
+    implementation("com.google.accompanist:accompanist-pager-indicators:0.36.0")
 }

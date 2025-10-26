@@ -15,3 +15,5 @@ build
 local.properties
 .DS_Store
 .idea/
+.kotlin/errors/
+.vscode/
