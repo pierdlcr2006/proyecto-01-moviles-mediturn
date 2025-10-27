@@ -15,6 +15,7 @@ import com.example.mediturn.ui.screens.NotificationsScreen
 import com.example.mediturn.ui.screens.ProfileScreen
 import com.example.mediturn.ui.screens.ScheduleAppointmentScreen
 import com.example.mediturn.ui.screens.SearchScreen
+import com.example.mediturn.ui.screens.SpecialtiesScreen
 import com.example.mediturn.util.Destination
 
 @Composable
@@ -31,6 +32,7 @@ fun NavGraph(
                 viewModel = viewModel,
                 onNotificationsClick = { navController.navigate(Destination.NOTIFICATIONS) },
                 onSearchClick = { navController.navigate(Destination.SEARCH) },
+                onSpecialtiesClick = { navController.navigate(Destination.SPECIALTIES) },
                 onDoctorClick = { doctorId ->
                     navController.navigate(Destination.doctorDetail(doctorId.toString()))
                 }
@@ -88,6 +90,13 @@ fun NavGraph(
             ScheduleAppointmentScreen(
                 navController = navController,
                 doctorId = doctorId,
+                viewModel = viewModel
+            )
+        }
+
+        composable(Destination.SPECIALTIES) {
+            SpecialtiesScreen(
+                navController = navController,
                 viewModel = viewModel
             )
         }

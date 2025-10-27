@@ -44,13 +44,9 @@ fun MediTurnApp(viewModel: MediturnViewModel) {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
-    val topLevelRoutes = setOf(
-        Destination.HOME,
-        Destination.SEARCH,
-        Destination.APPOINTMENTS,
-        Destination.PROFILE
-    )
-    val showBottomBar = currentRoute in topLevelRoutes
+    
+    // Mostrar bottom bar solo en HOME
+    val showBottomBar = currentRoute == Destination.HOME
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),

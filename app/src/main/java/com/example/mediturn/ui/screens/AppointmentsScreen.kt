@@ -1,5 +1,6 @@
 package com.example.mediturn.ui.screens
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -14,6 +15,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -38,10 +41,14 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
+import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -62,8 +69,8 @@ import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
+@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @Composable
-@OptIn(ExperimentalMaterial3Api::class)
 fun AppointmentsScreen(
     navController: NavController,
     viewModel: MediturnViewModel,
@@ -74,7 +81,8 @@ fun AppointmentsScreen(
     val doctors by viewModel.doctors.collectAsStateWithLifecycle()
     val specialties by viewModel.specialties.collectAsStateWithLifecycle()
 
-    var selectedTab by remember { mutableStateOf(0) }
+    val pagerState = rememberPagerState(pageCount = { 2 })
+    val coroutineScope = rememberCoroutineScope()
     val tabs = listOf("Próximas", "Pasadas")
 
     Column(
@@ -106,12 +114,12 @@ fun AppointmentsScreen(
         )
 
         TabRow(
-            selectedTabIndex = selectedTab,
+            selectedTabIndex = pagerState.currentPage,
             containerColor = Color.White,
             contentColor = Color(0xFF00BCD4),
             indicator = { tabPositions ->
                 TabRowDefaults.Indicator(
-                    modifier = Modifier.tabIndicatorOffset(tabPositions[selectedTab]),
+                    modifier = Modifier.tabIndicatorOffset(tabPositions[pagerState.currentPage]),
                     color = Color(0xFF00BCD4),
                     height = 3.dp
                 )
@@ -119,14 +127,18 @@ fun AppointmentsScreen(
         ) {
             tabs.forEachIndexed { index, title ->
                 Tab(
-                    selected = selectedTab == index,
-                    onClick = { selectedTab = index },
+                    selected = pagerState.currentPage == index,
+                    onClick = {
+                        coroutineScope.launch {
+                            pagerState.animateScrollToPage(index)
+                        }
+                    },
                     text = {
                         Text(
                             text = title,
                             fontSize = 16.sp,
-                            fontWeight = if (selectedTab == index) FontWeight.Bold else FontWeight.Normal,
-                            color = if (selectedTab == index) Color(0xFF00BCD4) else Color(0xFF757575)
+                            fontWeight = if (pagerState.currentPage == index) FontWeight.Bold else FontWeight.Normal,
+                            color = if (pagerState.currentPage == index) Color(0xFF00BCD4) else Color(0xFF757575)
                         )
                     }
                 )
@@ -136,23 +148,28 @@ fun AppointmentsScreen(
         val specialtyMap = remember(specialties) { specialties.associateBy { it.id } }
         val doctorMap = remember(doctors) { doctors.associateBy { it.id } }
 
-        when (selectedTab) {
-            0 -> AppointmentList(
-                appointments = upcomingAppointments,
-                doctorMap = doctorMap,
-                specialtyMap = specialtyMap,
-                isUpcoming = true,
-                onSchedule = onScheduleClick,
-                onCancel = { appointmentId -> viewModel.cancelAppointment(appointmentId) }
-            )
-            else -> AppointmentList(
-                appointments = pastAppointments,
-                doctorMap = doctorMap,
-                specialtyMap = specialtyMap,
-                isUpcoming = false,
-                onSchedule = {},
-                onCancel = {}
-            )
+        HorizontalPager(
+            state = pagerState,
+            modifier = Modifier.fillMaxSize()
+        ) { page ->
+            when (page) {
+                0 -> AppointmentList(
+                    appointments = upcomingAppointments,
+                    doctorMap = doctorMap,
+                    specialtyMap = specialtyMap,
+                    isUpcoming = true,
+                    onSchedule = onScheduleClick,
+                    onCancel = { appointmentId -> viewModel.cancelAppointment(appointmentId) }
+                )
+                1 -> AppointmentList(
+                    appointments = pastAppointments,
+                    doctorMap = doctorMap,
+                    specialtyMap = specialtyMap,
+                    isUpcoming = false,
+                    onSchedule = {},
+                    onCancel = {}
+                )
+            }
         }
     }
 }
@@ -175,8 +192,8 @@ private fun AppointmentList(
         modifier = Modifier
             .fillMaxSize()
             .background(Color(0xFFFAFAFA))
-            .padding(horizontal = 20.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+            .padding(horizontal = 20.dp, vertical = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         items(appointments, key = { it.id }) { appointment ->
             val doctor = doctorMap[appointment.doctorId]
@@ -208,75 +225,120 @@ private fun AppointmentCard(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            Row(
+                verticalAlignment = Alignment.Top,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                // Avatar con color según estado
+                val avatarColor = when {
+                    isUpcoming -> when (appointment.status) {
+                        AppointmentStatus.CONFIRMED -> Color(0xFF00BCD4)
+                        AppointmentStatus.RESCHEDULED -> Color(0xFF2196F3)
+                        else -> Color(0xFFAB47BC)
+                    }
+                    else -> Color(0xFFE0E0E0)
+                }
+                
                 Box(
                     modifier = Modifier
-                        .size(52.dp)
+                        .size(48.dp)
                         .clip(CircleShape)
-                        .background(Color(0xFFE0F7FA)),
+                        .background(avatarColor),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = Icons.Filled.Person,
                         contentDescription = "Doctor",
-                        tint = Color(0xFF00BCD4),
-                        modifier = Modifier.size(28.dp)
+                        tint = Color.White,
+                        modifier = Modifier.size(24.dp)
                     )
                 }
-
-                Spacer(modifier = Modifier.width(16.dp))
 
                 Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = doctor?.let { "${it.name} ${it.lastname}" } ?: "Doctor no disponible",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFF212121)
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = specialtyName.ifBlank { "Especialidad pendiente" },
-                        fontSize = 13.sp,
-                        color = Color(0xFF757575)
-                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.Top
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = doctor?.let { "Dr. ${it.name} ${it.lastname}" } ?: "Doctor no disponible",
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF212121)
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = specialtyName.ifBlank { "Especialidad pendiente" },
+                                fontSize = 14.sp,
+                                color = Color(0xFF757575)
+                            )
+                        }
+                        
+                        StatusBadge(status = appointment.status)
+                    }
+                    
+                    Spacer(modifier = Modifier.height(12.dp))
+                    
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.CalendarToday,
+                            contentDescription = null,
+                            tint = Color(0xFF9E9E9E),
+                            modifier = Modifier.size(14.dp)
+                        )
+                        Text(
+                            text = formatDate(appointment.dateTime),
+                            fontSize = 13.sp,
+                            color = Color(0xFF757575)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Icon(
+                            imageVector = Icons.Filled.AccessTime,
+                            contentDescription = null,
+                            tint = Color(0xFF9E9E9E),
+                            modifier = Modifier.size(14.dp)
+                        )
+                        Text(
+                            text = formatTime(appointment.dateTime),
+                            fontSize = 13.sp,
+                            color = Color(0xFF757575)
+                        )
+                    }
                 }
-
-                StatusBadge(status = appointment.status)
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
-
-            AppointmentDateRow(label = "Fecha", icon = Icons.Filled.CalendarToday, value = formatDate(appointment.dateTime))
-            Spacer(modifier = Modifier.height(6.dp))
-            AppointmentDateRow(label = "Hora", icon = Icons.Filled.AccessTime, value = formatTime(appointment.dateTime))
-
             if (isUpcoming && doctor != null) {
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(16.dp))
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    OutlinedButton(
+                    Button(
                         onClick = { onSchedule(doctor.id) },
                         modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(12.dp)
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00BCD4)),
+                        shape = RoundedCornerShape(24.dp)
                     ) {
                         Text(
                             text = "Reprogramar",
                             fontSize = 14.sp,
-                            color = MaterialTheme.colorScheme.primary,
-                            fontWeight = FontWeight.Medium
+                            fontWeight = FontWeight.Medium,
+                            color = Color.White
                         )
                     }
 
                     Button(
                         onClick = { onCancel(appointment.id) },
                         modifier = Modifier.weight(1f),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF5252)),
-                        shape = RoundedCornerShape(12.dp)
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF6B6B)),
+                        shape = RoundedCornerShape(24.dp)
                     ) {
                         Text(
                             text = "Cancelar",
@@ -294,40 +356,26 @@ private fun AppointmentCard(
 @Composable
 private fun StatusBadge(status: AppointmentStatus) {
     val (background, textColor, label) = when (status) {
-        AppointmentStatus.CONFIRMED -> Triple(Color(0xFFE0F7FA), Color(0xFF00897B), "Confirmada")
-        AppointmentStatus.RESCHEDULED -> Triple(Color(0xFFFFE0B2), Color(0xFFE65100), "Reprogramada")
-        AppointmentStatus.CANCELLED -> Triple(Color(0xFFFFCDD2), Color(0xFFD32F2F), "Cancelada")
-        AppointmentStatus.COMPLETED -> Triple(Color(0xFFE8F5E9), Color(0xFF2E7D32), "Atendida")
+        AppointmentStatus.CONFIRMED -> Triple(Color(0xFFD4F4DD), Color(0xFF00A86B), "Confirmada")
+        AppointmentStatus.RESCHEDULED -> Triple(Color(0xFFFFE5CC), Color(0xFFFF8C00), "Reprogramada")
+        AppointmentStatus.CANCELLED -> Triple(Color(0xFFFFE5E5), Color(0xFFFF0000), "Cancelada")
+        AppointmentStatus.COMPLETED -> Triple(Color(0xFFD4F4DD), Color(0xFF00A86B), "Atendida")
     }
 
-    SurfaceRounded(background) {
+    androidx.compose.material3.Surface(
+        shape = RoundedCornerShape(12.dp),
+        color = background
+    ) {
         Text(
             text = label,
-            fontSize = 12.sp,
-            fontWeight = FontWeight.Medium,
+            fontSize = 11.sp,
+            fontWeight = FontWeight.SemiBold,
             color = textColor,
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
         )
     }
 }
 
-@Composable
-private fun AppointmentDateRow(label: String, icon: androidx.compose.ui.graphics.vector.ImageVector, value: String) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Icon(
-            imageVector = icon,
-            contentDescription = label,
-            tint = Color(0xFF9E9E9E),
-            modifier = Modifier.size(16.dp)
-        )
-        Spacer(modifier = Modifier.width(6.dp))
-        Text(
-            text = value,
-            fontSize = 13.sp,
-            color = Color(0xFF757575)
-        )
-    }
-}
 
 @Composable
 private fun EmptyAppointmentsState(isUpcoming: Boolean) {
@@ -363,15 +411,6 @@ private fun BoxFilledCenter(content: @Composable () -> Unit) {
     }
 }
 
-@Composable
-private fun SurfaceRounded(color: Color, content: @Composable () -> Unit) {
-    androidx.compose.material3.Surface(
-        shape = RoundedCornerShape(8.dp),
-        color = color
-    ) {
-        content()
-    }
-}
 
 private fun formatDate(timestamp: Long): String {
     val formatter = DateTimeFormatter.ofPattern("dd MMM yyyy")

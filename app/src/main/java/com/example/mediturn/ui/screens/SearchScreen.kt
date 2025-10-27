@@ -20,6 +20,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
@@ -71,12 +72,7 @@ fun SearchScreen(
 
     var searchText by remember { mutableStateOf("") }
     var selectedSpecialtyId by remember { mutableStateOf<Long?>(null) }
-
-    LaunchedEffect(specialties) {
-        if (selectedSpecialtyId == null && specialties.isNotEmpty()) {
-            selectedSpecialtyId = specialties.first().id
-        }
-    }
+    var showFilterDialog by remember { mutableStateOf(false) }
 
     val filteredDoctors = remember(searchText, selectedSpecialtyId, doctors, specialties) {
         doctors.filter { doctor ->
@@ -143,7 +139,8 @@ fun SearchScreen(
                     Icon(
                         imageVector = Icons.Filled.Search,
                         contentDescription = "Buscar",
-                        tint = Color(0xFF9E9E9E)
+                        tint = Color(0xFF9E9E9E),
+                        modifier = Modifier.size(20.dp)
                     )
                 },
                 shape = RoundedCornerShape(12.dp),
@@ -156,34 +153,22 @@ fun SearchScreen(
                 singleLine = true
             )
 
-            Button(
-                onClick = { selectedSpecialtyId = null; searchText = "" },
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00BCD4)),
-                shape = RoundedCornerShape(12.dp)
-            ) {
-                Text(text = "Limpiar", color = Color.White, fontSize = 13.sp)
-            }
-        }
-
-        if (specialties.isNotEmpty()) {
-            Row(
+            IconButton(
+                onClick = { showFilterDialog = true },
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .horizontalScroll(rememberScrollState())
-                    .padding(horizontal = 20.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    .size(48.dp)
+                    .background(color = Color(0xFF00BCD4), shape = RoundedCornerShape(12.dp))
             ) {
-                specialties.forEach { specialty ->
-                    CategoryChip(
-                        text = specialty.name,
-                        selected = specialty.id == selectedSpecialtyId,
-                        onClick = { selectedSpecialtyId = specialty.id }
-                    )
-                }
+                Icon(
+                    imageVector = Icons.Filled.FilterList,
+                    contentDescription = "Filtrar",
+                    tint = Color.White,
+                    modifier = Modifier.size(24.dp)
+                )
             }
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(20.dp))
 
         if (filteredDoctors.isEmpty()) {
             EmptyState()
@@ -195,36 +180,103 @@ fun SearchScreen(
             )
         }
     }
+
+    // Diálogo de filtros
+    if (showFilterDialog) {
+        FilterDialog(
+            specialties = specialties,
+            selectedSpecialtyId = selectedSpecialtyId,
+            onSpecialtySelected = { specialtyId ->
+                selectedSpecialtyId = specialtyId
+            },
+            onDismiss = { showFilterDialog = false },
+            onClearFilter = {
+                selectedSpecialtyId = null
+                showFilterDialog = false
+            }
+        )
+    }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun CategoryChip(
-    text: String,
-    selected: Boolean,
-    onClick: () -> Unit
+private fun FilterDialog(
+    specialties: List<EspecialityEntity>,
+    selectedSpecialtyId: Long?,
+    onSpecialtySelected: (Long?) -> Unit,
+    onDismiss: () -> Unit,
+    onClearFilter: () -> Unit
 ) {
-    FilterChip(
-        selected = selected,
-        onClick = onClick,
-        label = {
+    androidx.compose.material3.AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
             Text(
-                text = text,
-                fontSize = 14.sp,
-                fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal
+                text = "Filtrar por especialidad",
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF212121)
             )
         },
-        colors = FilterChipDefaults.filterChipColors(
-            selectedContainerColor = Color(0xFFE0F7FA),
-            selectedLabelColor = Color(0xFF00838F),
-            containerColor = Color(0xFFF5F5F5),
-            labelColor = Color(0xFF757575)
-        ),
-        border = FilterChipDefaults.filterChipBorder(
-            enabled = true,
-            selected = selected,
-            borderColor = if (selected) Color(0xFF00BCD4) else Color(0xFFE0E0E0),
-            borderWidth = 1.dp
-        )
+        text = {
+            LazyColumn(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                items(specialties, key = { it.id }) { specialty ->
+                    FilterChip(
+                        selected = specialty.id == selectedSpecialtyId,
+                        onClick = {
+                            onSpecialtySelected(specialty.id)
+                            onDismiss()
+                        },
+                        label = {
+                            Text(
+                                text = specialty.name,
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Medium
+                            )
+                        },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = Color(0xFFE0F7FA),
+                            selectedLabelColor = Color(0xFF00838F),
+                            containerColor = Color(0xFFF5F5F5),
+                            labelColor = Color(0xFF757575)
+                        ),
+                        border = FilterChipDefaults.filterChipBorder(
+                            enabled = true,
+                            selected = specialty.id == selectedSpecialtyId,
+                            borderColor = if (specialty.id == selectedSpecialtyId) Color(0xFF00BCD4) else Color(0xFFE0E0E0),
+                            borderWidth = 1.dp
+                        ),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            androidx.compose.material3.TextButton(
+                onClick = onClearFilter
+            ) {
+                Text(
+                    text = "Limpiar filtro",
+                    color = Color(0xFF00BCD4),
+                    fontWeight = FontWeight.Medium
+                )
+            }
+        },
+        dismissButton = {
+            androidx.compose.material3.TextButton(
+                onClick = onDismiss
+            ) {
+                Text(
+                    text = "Cerrar",
+                    color = Color(0xFF757575),
+                    fontWeight = FontWeight.Medium
+                )
+            }
+        },
+        containerColor = Color.White,
+        shape = RoundedCornerShape(20.dp)
     )
 }
 
@@ -272,69 +324,67 @@ private fun DoctorCard(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp)
+                .padding(20.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(
-                    modifier = Modifier
-                        .size(60.dp)
-                        .clip(CircleShape)
-                        .background(Color(0xFFE0F7FA)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.Person,
-                        contentDescription = "Foto del médico",
-                        tint = Color(0xFF00BCD4),
-                        modifier = Modifier.size(32.dp)
-                    )
-                }
-                Spacer(modifier = Modifier.width(16.dp))
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = "${doctor.name} ${doctor.lastname}",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFF212121)
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = specialty,
-                        fontSize = 14.sp,
-                        color = Color(0xFF00BCD4),
-                        fontWeight = FontWeight.Medium
-                    )
-                    Spacer(modifier = Modifier.height(2.dp))
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.Filled.LocationOn,
-                            contentDescription = null,
-                            tint = Color(0xFF9E9E9E),
-                            modifier = Modifier.size(14.dp)
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(
-                            text = doctor.location,
-                            fontSize = 12.sp,
-                            color = Color(0xFF757575)
-                        )
-                    }
-                }
+            Box(
+                modifier = Modifier
+                    .size(70.dp)
+                    .clip(CircleShape)
+                    .background(Color(0xFFE0E0E0)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Person,
+                    contentDescription = "Foto del médico",
+                    tint = Color(0xFF9E9E9E),
+                    modifier = Modifier.size(40.dp)
+                )
             }
 
             Spacer(modifier = Modifier.height(12.dp))
 
+            Text(
+                text = "Dr. ${doctor.name} ${doctor.lastname}",
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF212121),
+                textAlign = TextAlign.Center
+            )
+
+            Spacer(modifier = Modifier.height(4.dp))
+
+            Text(
+                text = specialty,
+                fontSize = 14.sp,
+                color = Color(0xFF00BCD4),
+                fontWeight = FontWeight.Medium,
+                textAlign = TextAlign.Center
+            )
+
+            Spacer(modifier = Modifier.height(4.dp))
+
+            Text(
+                text = doctor.location,
+                fontSize = 13.sp,
+                color = Color(0xFF757575),
+                textAlign = TextAlign.Center
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
             Button(
                 onClick = onDetailClick,
-                modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00BCD4)),
-                shape = RoundedCornerShape(12.dp)
+                shape = RoundedCornerShape(24.dp),
+                modifier = Modifier.padding(horizontal = 16.dp)
             ) {
                 Text(
                     text = "Ver detalle",
-                    fontSize = 14.sp,
+                    fontSize = 13.sp,
                     fontWeight = FontWeight.Medium,
-                    color = Color.White
+                    color = Color.White,
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 2.dp)
                 )
             }
         }

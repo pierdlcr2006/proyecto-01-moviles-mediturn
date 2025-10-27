@@ -67,6 +67,7 @@ fun HomeScreen(
     viewModel: MediturnViewModel,
     onNotificationsClick: () -> Unit,
     onSearchClick: () -> Unit,
+    onSpecialtiesClick: () -> Unit,
     onDoctorClick: (Long) -> Unit
 ) {
     val patient by viewModel.activePatient.collectAsStateWithLifecycle()
@@ -96,7 +97,7 @@ fun HomeScreen(
 
         SpecialtiesSection(
             specialties = specialties,
-            onSeeAll = onSearchClick
+            onSeeAll = onSpecialtiesClick
         )
 
         CarruselSection()
@@ -110,7 +111,7 @@ fun HomeScreen(
 
         if (topDoctors.isNotEmpty()) {
             TopDoctorsSection(
-                doctors = topDoctors,
+                doctors = topDoctors.take(4),
                 onDoctorClick = onDoctorClick
             )
         }
@@ -139,7 +140,7 @@ private fun HeaderSection(
             modifier = Modifier.align(Alignment.CenterHorizontally)
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(20.dp))
 
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -149,52 +150,34 @@ private fun HeaderSection(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     text = "Hola, $userName",
-                    fontSize = 20.sp,
+                    fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color(0xFF212121)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
-                Icon(
-                    imageVector = Icons.Filled.PanTool,
-                    contentDescription = null,
-                    tint = Color(0xFFFFC107),
-                    modifier = Modifier.size(24.dp)
+                Text(
+                    text = "👋",
+                    fontSize = 18.sp
                 )
             }
 
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                IconButton(onClick = onSearchClick) {
-                    Icon(
-                        imageVector = Icons.Filled.Search,
-                        contentDescription = "Buscar",
-                        tint = Color(0xFF757575)
-                    )
-                }
-
-                IconButton(onClick = onNotificationsClick) {
-                    BadgedBox(
-                        badge = {
-                            if (unreadNotifications > 0) {
-                                Badge(
-                                    containerColor = Color(0xFFFF3D00)
-                                ) {
-                                    Text(
-                                        text = unreadNotifications.coerceAtMost(9).toString(),
-                                        color = Color.White,
-                                        fontSize = 10.sp,
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                }
-                            }
+            IconButton(onClick = onNotificationsClick) {
+                BadgedBox(
+                    badge = {
+                        if (unreadNotifications > 0) {
+                            Badge(
+                                containerColor = Color(0xFFFF3D00),
+                                modifier = Modifier.size(8.dp)
+                            )
                         }
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.Notifications,
-                            contentDescription = "Notificaciones",
-                            tint = Color(0xFF757575),
-                            modifier = Modifier.size(28.dp)
-                        )
                     }
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Notifications,
+                        contentDescription = "Notificaciones",
+                        tint = Color(0xFF9E9E9E),
+                        modifier = Modifier.size(24.dp)
+                    )
                 }
             }
         }
@@ -212,63 +195,35 @@ private fun SpecialtiesSection(
             .padding(horizontal = 20.dp, vertical = 8.dp),
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        onClick = onSeeAll
     ) {
-        Column(modifier = Modifier.padding(20.dp)) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 24.dp, horizontal = 20.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(70.dp)
+                    .background(color = Color(0xFFE0F7FA), shape = CircleShape),
+                contentAlignment = Alignment.Center
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Box(
-                        modifier = Modifier
-                            .size(60.dp)
-                            .background(color = Color(0xFFE0F7FA), shape = CircleShape),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.MedicalServices,
-                            contentDescription = "Especialidades",
-                            tint = Color(0xFF00BCD4),
-                            modifier = Modifier.size(32.dp)
-                        )
-                    }
-                    Spacer(modifier = Modifier.width(16.dp))
-                    Column {
-                        Text(
-                            text = "Especialidades",
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Medium,
-                            color = Color(0xFF212121)
-                        )
-                        Text(
-                            text = "Explora áreas médicas disponibles",
-                            fontSize = 12.sp,
-                            color = Color(0xFF757575)
-                        )
-                    }
-                }
-
-                TextButtonSmall(
-                    label = "Ver todas",
-                    onClick = onSeeAll
+                Icon(
+                    imageVector = Icons.Filled.MedicalServices,
+                    contentDescription = "Especialidades",
+                    tint = Color(0xFF00BCD4),
+                    modifier = Modifier.size(36.dp)
                 )
             }
-
-            if (specialties.isNotEmpty()) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 16.dp)
-                        .horizontalScroll(rememberScrollState()),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    specialties.take(6).forEach { specialty ->
-                        SpecialtyChip(name = specialty.name)
-                    }
-                }
-            }
+            Spacer(modifier = Modifier.height(12.dp))
+            Text(
+                text = "Especialidades",
+                fontSize = 16.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = Color(0xFF212121)
+            )
         }
     }
 }
@@ -322,7 +277,7 @@ private fun CarruselSection() {
                 Image(
                     painter = painterResource(id = images[page]),
                     contentDescription = null,
-                    contentScale = ContentScale.Crop,
+                    contentScale = ContentScale.Fit,
                     modifier = Modifier.fillMaxSize()
                 )
             }
@@ -359,65 +314,63 @@ private fun NextAppointmentCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(16.dp),
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.Top
             ) {
-                Box(
-                    modifier = Modifier
-                        .size(48.dp)
-                        .background(color = Color(0xFFE0F7FA), shape = RoundedCornerShape(12.dp)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.Notifications,
-                        contentDescription = "Próxima cita",
-                        tint = Color(0xFF00BCD4),
-                        modifier = Modifier.size(24.dp)
-                    )
-                }
+                Icon(
+                    imageVector = Icons.Filled.MedicalServices,
+                    contentDescription = "Próxima cita",
+                    tint = Color(0xFF00BCD4),
+                    modifier = Modifier.size(24.dp)
+                )
 
-                Spacer(modifier = Modifier.width(16.dp))
+                Spacer(modifier = Modifier.width(12.dp))
 
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = "Próxima cita",
                         fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold,
+                        fontWeight = FontWeight.SemiBold,
                         color = Color(0xFF212121)
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = "${doctor.name} ${doctor.lastname}",
-                        fontSize = 14.sp,
-                        color = Color(0xFF00838F),
-                        fontWeight = FontWeight.Medium
-                    )
-                    Spacer(modifier = Modifier.height(2.dp))
-                    Text(
-                        text = formatAppointmentDate(appointment.dateTime),
+                        text = "${doctor.name} ${doctor.lastname} – ${formatAppointmentDate(appointment.dateTime)}",
                         fontSize = 13.sp,
-                        color = Color(0xFF757575)
+                        color = Color(0xFF757575),
+                        lineHeight = 18.sp
                     )
                 }
             }
         } else {
-            Column(
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(20.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+                    .padding(16.dp),
+                verticalAlignment = Alignment.Top
             ) {
-                Text(
-                    text = "Sin citas programadas",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = Color(0xFF212121)
+                Icon(
+                    imageVector = Icons.Filled.MedicalServices,
+                    contentDescription = "Próxima cita",
+                    tint = Color(0xFF00BCD4),
+                    modifier = Modifier.size(24.dp)
                 )
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = "Agenda tu próxima consulta desde la sección Buscar",
-                    fontSize = 13.sp,
-                    color = Color(0xFF757575)
-                )
+
+                Spacer(modifier = Modifier.width(12.dp))
+
+                Column {
+                    Text(
+                        text = "Próxima cita",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color(0xFF212121)
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "No tienes citas programadas",
+                        fontSize = 13.sp,
+                        color = Color(0xFF757575)
+                    )
+                }
             }
         }
     }
@@ -437,34 +390,27 @@ private fun TipsCard() {
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.Top
         ) {
-            Box(
-                modifier = Modifier
-                    .size(48.dp)
-                    .background(color = Color(0xFFE8F5E9), shape = RoundedCornerShape(12.dp)),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.PanTool,
-                    contentDescription = null,
-                    tint = Color(0xFF4CAF50),
-                    modifier = Modifier.size(24.dp)
-                )
-            }
+            Icon(
+                imageVector = Icons.Filled.PanTool,
+                contentDescription = null,
+                tint = Color(0xFF4CAF50),
+                modifier = Modifier.size(24.dp)
+            )
 
-            Spacer(modifier = Modifier.width(16.dp))
+            Spacer(modifier = Modifier.width(12.dp))
 
             Column {
                 Text(
                     text = "Consejo del día",
                     fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold,
+                    fontWeight = FontWeight.SemiBold,
                     color = Color(0xFF212121)
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = "Hidrátate bien y duerme lo suficiente para mantenerte saludable.",
+                    text = "Recuerda hidratarte y descansar bien antes de tu cita.",
                     fontSize = 13.sp,
                     color = Color(0xFF757575),
                     lineHeight = 18.sp
@@ -574,7 +520,7 @@ private fun TextButtonSmall(
 }
 
 private fun formatAppointmentDate(timestamp: Long): String {
-    val formatter = DateTimeFormatter.ofPattern("dd MMM yyyy • hh:mm a")
+    val formatter = DateTimeFormatter.ofPattern("hh:mm a. / dd MMM")
     val zonedDateTime = Instant.ofEpochMilli(timestamp)
         .atZone(ZoneId.systemDefault())
     return formatter.format(zonedDateTime)
