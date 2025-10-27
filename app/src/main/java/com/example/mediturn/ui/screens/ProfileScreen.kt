@@ -1,6 +1,8 @@
 package com.example.mediturn.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,11 +20,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.CalendarToday
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.ArrowForward
+import androidx.compose.material.icons.filled.CameraAlt
+import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Phone
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -49,17 +51,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.example.mediturn.data.model.Appointment
-import com.example.mediturn.data.model.DoctorEntity
 import com.example.mediturn.ui.MediturnViewModel
 import com.example.mediturn.util.Destination
-import java.time.Instant
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
@@ -69,13 +67,6 @@ fun ProfileScreen(
     onNotificationsClick: () -> Unit
 ) {
     val patient by viewModel.activePatient.collectAsStateWithLifecycle()
-    val upcomingAppointments by viewModel.upcomingAppointments.collectAsStateWithLifecycle()
-    val doctors by viewModel.doctors.collectAsStateWithLifecycle()
-
-    val nextAppointment = upcomingAppointments.firstOrNull()
-    val appointmentDoctor = nextAppointment?.let { appointment ->
-        doctors.firstOrNull { it.id == appointment.doctorId }
-    }
 
     Column(
         modifier = Modifier
@@ -100,15 +91,6 @@ fun ProfileScreen(
                     )
                 }
             },
-            actions = {
-                IconButton(onClick = onNotificationsClick) {
-                    Icon(
-                        imageVector = Icons.Filled.CalendarToday,
-                        contentDescription = "Notificaciones",
-                        tint = MaterialTheme.colorScheme.primary
-                    )
-                }
-            },
             colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
         )
 
@@ -119,8 +101,9 @@ fun ProfileScreen(
                 .padding(20.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(40.dp))
 
+            // Foto de perfil
             Box(
                 modifier = Modifier
                     .size(120.dp)
@@ -136,75 +119,113 @@ fun ProfileScreen(
                 )
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
+            // Nombre
             Text(
                 text = patient?.fullName.orEmpty().ifBlank { "Usuario MediTurn" },
-                fontSize = 22.sp,
+                fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color(0xFF212121)
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(4.dp))
 
+            // Email
             Text(
                 text = patient?.email.orEmpty(),
                 fontSize = 14.sp,
                 color = Color(0xFF757575)
             )
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(32.dp))
 
-            ProfileActionsCard(
+            // Card de opciones
+            ProfileMenuCard(
                 onEditProfile = { navController.navigate(Destination.EDIT_PROFILE) },
-                onNotifications = onNotificationsClick
+                onSettings = { /* TODO: Agregar navegación a configuración */ },
+                onLogout = { /* TODO: Implementar cerrar sesión */ }
             )
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.weight(1f))
 
-            PersonalInfoCard(patient?.phone, patient?.address)
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            NextAppointmentSection(
-                appointment = nextAppointment,
-                doctor = appointmentDoctor,
-                onSchedule = { doctorId ->
-                    navController.navigate(Destination.scheduleAppointment(doctorId.toString()))
+            // Logo y versión
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.padding(bottom = 24.dp)
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(40.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(Color(0xFF00BCD4)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "M",
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "MediTurn",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color(0xFF212121)
+                    )
                 }
-            )
-
-            Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "Versión 1.0.0",
+                    fontSize = 12.sp,
+                    color = Color(0xFF9E9E9E)
+                )
+            }
         }
     }
 }
 
 @Composable
-private fun ProfileActionsCard(
+private fun ProfileMenuCard(
     onEditProfile: () -> Unit,
-    onNotifications: () -> Unit
+    onSettings: () -> Unit,
+    onLogout: () -> Unit
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = Color.White),
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(12.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column {
             ProfileMenuItem(
-                icon = Icons.Filled.Edit,
+                icon = Icons.Filled.Person,
                 iconColor = Color(0xFF00BCD4),
                 title = "Editar perfil",
                 onClick = onEditProfile
             )
 
-            Divider(color = Color(0xFFF5F5F5), thickness = 1.dp)
+            Divider(color = Color(0xFFEEEEEE), thickness = 1.dp)
 
             ProfileMenuItem(
-                icon = Icons.Filled.CalendarToday,
+                icon = Icons.Filled.Settings,
                 iconColor = Color(0xFF00BCD4),
-                title = "Mis notificaciones",
-                onClick = onNotifications
+                title = "Configuración",
+                onClick = onSettings
+            )
+
+            Divider(color = Color(0xFFEEEEEE), thickness = 1.dp)
+
+            ProfileMenuItem(
+                icon = Icons.Filled.ExitToApp,
+                iconColor = Color(0xFFF44336),
+                title = "Cerrar sesión",
+                onClick = onLogout
             )
         }
     }
@@ -220,160 +241,37 @@ private fun ProfileMenuItem(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 20.dp, vertical = 18.dp),
+            .clickable(onClick = onClick)
+            .padding(horizontal = 20.dp, vertical = 16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Box(
-            modifier = Modifier
-                .size(44.dp)
-                .clip(RoundedCornerShape(12.dp))
-                .background(iconColor.copy(alpha = 0.12f)),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = title,
-                tint = iconColor
-            )
-        }
+        Icon(
+            imageVector = icon,
+            contentDescription = title,
+            tint = iconColor,
+            modifier = Modifier.size(24.dp)
+        )
 
         Spacer(modifier = Modifier.width(16.dp))
 
         Text(
             text = title,
             fontSize = 15.sp,
-            fontWeight = FontWeight.Medium,
+            fontWeight = FontWeight.Normal,
             color = Color(0xFF212121)
         )
 
         Spacer(modifier = Modifier.weight(1f))
 
         Icon(
-            imageVector = Icons.Filled.ArrowBack,
+            imageVector = Icons.Filled.ArrowForward,
             contentDescription = null,
             tint = Color(0xFFBDBDBD),
-            modifier = Modifier.size(18.dp)
+            modifier = Modifier.size(20.dp)
         )
     }
 }
 
-@Composable
-private fun PersonalInfoCard(phone: String?, address: String?) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-    ) {
-        Column(modifier = Modifier.padding(20.dp)) {
-            Text(
-                text = "Información personal",
-                fontSize = 16.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = Color(0xFF212121)
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    imageVector = Icons.Filled.Phone,
-                    contentDescription = null,
-                    tint = Color(0xFF757575)
-                )
-                Spacer(modifier = Modifier.width(12.dp))
-                Text(
-                    text = phone.orEmpty().ifBlank { "Número no disponible" },
-                    fontSize = 14.sp,
-                    color = Color(0xFF212121)
-                )
-            }
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    imageVector = Icons.Filled.LocationOn,
-                    contentDescription = null,
-                    tint = Color(0xFF757575)
-                )
-                Spacer(modifier = Modifier.width(12.dp))
-                Text(
-                    text = address.orEmpty().ifBlank { "Agrega una dirección" },
-                    fontSize = 14.sp,
-                    color = Color(0xFF212121)
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun NextAppointmentSection(
-    appointment: Appointment?,
-    doctor: DoctorEntity?,
-    onSchedule: (Long) -> Unit
-) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-    ) {
-        Column(modifier = Modifier.padding(20.dp)) {
-            Text(
-                text = "Próxima cita",
-                fontSize = 16.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = Color(0xFF212121)
-            )
-            Spacer(modifier = Modifier.height(12.dp))
-
-            if (appointment != null && doctor != null) {
-                Text(
-                    text = "${doctor.name} ${doctor.lastname}",
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = Color(0xFF00838F)
-                )
-                Spacer(modifier = Modifier.height(6.dp))
-                Text(
-                    text = formatAppointmentDate(appointment.dateTime),
-                    fontSize = 14.sp,
-                    color = Color(0xFF757575)
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-                Button(
-                    onClick = { onSchedule(doctor.id) },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00BCD4)),
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Text(
-                        text = "Reprogramar",
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White
-                    )
-                }
-            } else {
-                Text(
-                    text = "Aún no tienes citas programadas.",
-                    fontSize = 14.sp,
-                    color = Color(0xFF757575)
-                )
-                Spacer(modifier = Modifier.height(12.dp))
-                OutlinedButton(
-                    onClick = { onSchedule(0L) },
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Text(text = "Agendar nueva cita", fontSize = 14.sp)
-                }
-            }
-        }
-    }
-}
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
@@ -400,15 +298,17 @@ fun EditProfileScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFFAFAFA))
+            .background(Color.White)
     ) {
         TopAppBar(
             title = {
                 Text(
-                    text = "Editar perfil",
+                    text = "Editar Perfil",
                     fontSize = 18.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = Color(0xFF212121)
+                    color = Color(0xFF212121),
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
                 )
             },
             navigationIcon = {
@@ -428,20 +328,87 @@ fun EditProfileScreen(
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
                 .padding(20.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            ProfileTextField(label = "Nombre completo", value = fullName, onValueChange = { fullName = it })
-            ProfileTextField(label = "Correo electrónico", value = email, onValueChange = { email = it })
-            ProfileTextField(label = "Número de teléfono", value = phone, onValueChange = { phone = it })
-            ProfileTextField(
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // Foto de perfil con botón de cámara
+            Box(contentAlignment = Alignment.BottomEnd) {
+                Box(
+                    modifier = Modifier
+                        .size(120.dp)
+                        .clip(CircleShape)
+                        .border(4.dp, Color.White, CircleShape)
+                        .background(Color(0xFFE0F7FA)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Person,
+                        contentDescription = "Foto de perfil",
+                        tint = Color(0xFF00BCD4),
+                        modifier = Modifier.size(60.dp)
+                    )
+                }
+                
+                // Botón de cámara
+                Box(
+                    modifier = Modifier
+                        .size(36.dp)
+                        .clip(CircleShape)
+                        .background(Color(0xFF00BCD4))
+                        .clickable { /* TODO: Implementar cambio de foto */ },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.CameraAlt,
+                        contentDescription = "Cambiar foto",
+                        tint = Color.White,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(32.dp))
+
+            // Campos de texto
+            EditProfileTextField(
+                label = "Nombre completo",
+                value = fullName,
+                onValueChange = { fullName = it },
+                placeholder = "María González"
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            EditProfileTextField(
+                label = "Correo electrónico",
+                value = email,
+                onValueChange = { email = it },
+                placeholder = "maria.gonzalez@email.com"
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            EditProfileTextField(
+                label = "Número de teléfono",
+                value = phone,
+                onValueChange = { phone = it },
+                placeholder = "+51 961 345 678"
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            EditProfileTextField(
                 label = "Dirección",
                 value = address,
                 onValueChange = { address = it },
+                placeholder = "Calle Mayor 123, 4º B 28001 Lima, Perú",
                 minLines = 3
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(32.dp))
 
+            // Botón Guardar cambios
             Button(
                 onClick = {
                     viewModel.updatePatientProfile(
@@ -456,41 +423,54 @@ fun EditProfileScreen(
                     .fillMaxWidth()
                     .height(56.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00BCD4)),
-                shape = RoundedCornerShape(16.dp)
+                shape = RoundedCornerShape(12.dp)
             ) {
                 Text(
                     text = "Guardar cambios",
                     fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold,
+                    fontWeight = FontWeight.SemiBold,
                     color = Color.White
                 )
             }
 
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Botón Cancelar
             OutlinedButton(
                 onClick = { navController.popBackStack() },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
-                shape = RoundedCornerShape(16.dp)
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.outlinedButtonColors(
+                    contentColor = Color(0xFF757575)
+                )
             ) {
-                Text(text = "Cancelar", fontSize = 16.sp)
+                Text(
+                    text = "Cancelar",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Normal
+                )
             }
+
+            Spacer(modifier = Modifier.height(24.dp))
         }
     }
 }
 
 @Composable
-private fun ProfileTextField(
+private fun EditProfileTextField(
     label: String,
     value: String,
     onValueChange: (String) -> Unit,
+    placeholder: String = "",
     minLines: Int = 1
 ) {
     Column(modifier = Modifier.fillMaxWidth()) {
         Text(
             text = label,
             fontSize = 14.sp,
-            fontWeight = FontWeight.Medium,
+            fontWeight = FontWeight.Normal,
             color = Color(0xFF212121)
         )
         Spacer(modifier = Modifier.height(8.dp))
@@ -498,20 +478,24 @@ private fun ProfileTextField(
             value = value,
             onValueChange = onValueChange,
             modifier = Modifier.fillMaxWidth(),
+            placeholder = {
+                Text(
+                    text = placeholder,
+                    color = Color(0xFFBDBDBD),
+                    fontSize = 14.sp
+                )
+            },
             colors = OutlinedTextFieldDefaults.colors(
                 focusedBorderColor = Color(0xFF00BCD4),
                 unfocusedBorderColor = Color(0xFFE0E0E0),
-                focusedContainerColor = Color.White,
-                unfocusedContainerColor = Color.White
+                focusedContainerColor = Color(0xFFFAFAFA),
+                unfocusedContainerColor = Color(0xFFFAFAFA)
             ),
             shape = RoundedCornerShape(12.dp),
             minLines = minLines,
-            maxLines = if (minLines > 1) minLines else 1
+            maxLines = if (minLines > 1) minLines else 1,
+            singleLine = minLines == 1
         )
     }
 }
 
-private fun formatAppointmentDate(timestamp: Long): String {
-    val formatter = DateTimeFormatter.ofPattern("dd MMM yyyy • hh:mm a")
-    return Instant.ofEpochMilli(timestamp).atZone(ZoneId.systemDefault()).format(formatter)
-}

@@ -1,5 +1,7 @@
 package com.example.mediturn.ui.screens
 
+import android.app.DatePickerDialog
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -19,18 +21,25 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.CalendarToday
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.EventNote
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Videocam
 import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -40,23 +49,32 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
+import com.example.mediturn.data.model.DayAvailability
 import com.example.mediturn.data.model.TimeSlot
 import com.example.mediturn.ui.MediturnViewModel
+import com.example.mediturn.util.Destination
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import java.util.Calendar
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
@@ -67,20 +85,22 @@ fun ScheduleAppointmentScreen(
 ) {
     val doctorIdLong = doctorId.toLongOrNull() ?: -1L
     val doctor by viewModel.doctor(doctorIdLong).collectAsStateWithLifecycle(initialValue = null)
+    val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
 
-    var selectedDate by remember { mutableStateOf(LocalDate.now()) }
-    var selectedSlot by remember { mutableStateOf<TimeSlot?>(null) }
-    val availableDates = remember { (0..6).map { LocalDate.now().plusDays(it.toLong()) } }
+    var selectedDate by remember { mutableStateOf<LocalDate?>(null) }
+    var selectedTimeSlot by remember { mutableStateOf<TimeSlot?>(null) }
+    var consultationType by remember { mutableStateOf("Presencial") } // "Presencial" o "Teleconsulta"
+    var reason by remember { mutableStateOf("") }
+    var isProcessing by remember { mutableStateOf(false) }
+    var showSuccess by remember { mutableStateOf(false) }
 
-    LaunchedEffect(doctor) {
-        selectedSlot = doctor?.timeSlot?.firstOrNull()
-    }
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color(0xFFFAFAFA))
-    ) {
+    Box(modifier = Modifier.fillMaxSize()) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color(0xFFFAFAFA))
+        ) {
         TopAppBar(
             title = {
                 Text(
@@ -113,67 +133,109 @@ fun ScheduleAppointmentScreen(
                 .verticalScroll(rememberScrollState())
                 .padding(20.dp)
         ) {
-            DoctorSummaryCard(doctorName = "${doctor!!.name} ${doctor!!.lastname}", specialty = "${doctor!!.hospital}")
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            Text(
-                text = "Selecciona una fecha",
-                fontSize = 15.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = Color(0xFF212121)
+            DoctorSummaryCard(
+                doctorName = "Dr. ${doctor!!.name} ${doctor!!.lastname}",
+                specialty = doctor!!.hospital
             )
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
+            // Modalidad de consulta
+            SectionHeader(
+                icon = Icons.Filled.Home,
+                title = "Modalidad de la consulta"
+            )
+            Spacer(modifier = Modifier.height(12.dp))
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                availableDates.forEach { date ->
-                    val isSelected = selectedDate == date
-                    Surface(
-                        modifier = Modifier
-                            .weight(1f)
-                            .clip(RoundedCornerShape(12.dp))
-                            .clickable { selectedDate = date },
-                        color = if (isSelected) Color(0xFF00BCD4) else Color.White,
-                        tonalElevation = if (isSelected) 4.dp else 0.dp
-                    ) {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 14.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            Text(
-                                text = dateFormatter.format(date),
-                                fontWeight = FontWeight.SemiBold,
-                                color = if (isSelected) Color.White else Color(0xFF212121)
-                            )
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Text(
-                                text = dayFormatter.format(date),
-                                fontSize = 12.sp,
-                                color = if (isSelected) Color.White.copy(alpha = 0.85f) else Color(0xFF757575)
-                            )
-                        }
-                    }
+                ModalityChip(
+                    text = "Presencial",
+                    icon = Icons.Filled.Home,
+                    selected = consultationType == "Presencial",
+                    onClick = { consultationType = "Presencial" },
+                    modifier = Modifier.weight(1f)
+                )
+                // Solo mostrar Teleconsulta si el doctor lo tiene disponible
+                if (doctor!!.hasTeleconsultation) {
+                    ModalityChip(
+                        text = "Teleconsulta",
+                        icon = Icons.Filled.Videocam,
+                        selected = consultationType == "Teleconsulta",
+                        onClick = { consultationType = "Teleconsulta" },
+                        modifier = Modifier.weight(1f)
+                    )
+                } else {
+                    // Espacio vacío si no hay teleconsulta
+                    Spacer(modifier = Modifier.weight(1f))
                 }
             }
+            Spacer(modifier = Modifier.height(20.dp))
 
-            Spacer(modifier = Modifier.height(24.dp))
+            // Fecha de la cita
+            SectionHeader(
+                icon = Icons.Filled.CalendarToday,
+                title = "Fecha de la cita"
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+            OutlinedTextField(
+                value = selectedDate?.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) ?: "",
+                onValueChange = {},
+                modifier = Modifier.fillMaxWidth(),
+                placeholder = { Text("mm/dd/yyyy") },
+                readOnly = true,
+                trailingIcon = {
+                    IconButton(
+                        onClick = {
+                            val calendar = Calendar.getInstance()
+                            val year = calendar.get(Calendar.YEAR)
+                            val month = calendar.get(Calendar.MONTH)
+                            val day = calendar.get(Calendar.DAY_OF_MONTH)
 
-            Text(
-                text = "Elige un horario",
-                fontSize = 15.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = Color(0xFF212121)
+                            DatePickerDialog(
+                                context,
+                                { _, selectedYear, selectedMonth, selectedDay ->
+                                    val date = LocalDate.of(selectedYear, selectedMonth + 1, selectedDay)
+                                    val dayOfWeek = date.dayOfWeek
+                                    if (isDayAvailable(dayOfWeek, doctor!!.availability)) {
+                                        selectedDate = date
+                                    }
+                                },
+                                year,
+                                month,
+                                day
+                            ).apply {
+                                datePicker.minDate = System.currentTimeMillis()
+                            }.show()
+                        }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.CalendarToday,
+                            contentDescription = "Seleccionar fecha",
+                            tint = Color(0xFF757575)
+                        )
+                    }
+                },
+                shape = RoundedCornerShape(12.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = Color(0xFF00BCD4),
+                    unfocusedBorderColor = Color(0xFFE0E0E0)
+                )
             )
 
+            Spacer(modifier = Modifier.height(20.dp))
+
+            // Hora de la cita
+            SectionHeader(
+                icon = Icons.Filled.CalendarToday,
+                title = "Hora de la cita"
+            )
             Spacer(modifier = Modifier.height(12.dp))
 
-            doctor!!.timeSlot.chunked(2).forEach { rowSlots ->
+            // Chips de horarios en grid de 3 columnas
+            val timeSlots = doctor!!.timeSlot
+            timeSlots.chunked(3).forEach { rowSlots ->
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -181,74 +243,104 @@ fun ScheduleAppointmentScreen(
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     rowSlots.forEach { slot ->
-                        val isSelected = selectedSlot == slot
-                        Surface(
-                            modifier = Modifier
-                                .weight(1f)
-                                .clip(RoundedCornerShape(12.dp))
-                                .clickable { selectedSlot = slot },
-                            color = if (isSelected) Color(0xFFE0F7FA) else Color.White,
-                            tonalElevation = if (isSelected) 2.dp else 0.dp
-                        ) {
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(vertical = 14.dp),
-                                horizontalAlignment = Alignment.CenterHorizontally
-                            ) {
-                                Text(
-                                    text = slot.start,
-                                    fontWeight = FontWeight.Medium,
-                                    color = if (isSelected) Color(0xFF00838F) else Color(0xFF212121)
-                                )
-                                Spacer(modifier = Modifier.height(4.dp))
-                                Text(
-                                    text = "${slot.start} - ${slot.end}",
-                                    fontSize = 12.sp,
-                                    color = Color(0xFF757575)
-                                )
-                            }
-                        }
+                        TimeChip(
+                            timeSlot = slot,
+                            selected = selectedTimeSlot == slot,
+                            onClick = { selectedTimeSlot = slot },
+                            modifier = Modifier.weight(1f)
+                        )
                     }
-                    if (rowSlots.size == 1) {
+                    // Rellenar espacios vacíos
+                    repeat(3 - rowSlots.size) {
                         Spacer(modifier = Modifier.weight(1f))
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
-            SummaryCard(
-                doctorName = "${doctor!!.name} ${doctor!!.lastname}",
-                date = selectedDate,
-                slot = selectedSlot
+            // Motivo de la consulta
+            SectionHeader(
+                icon = Icons.Filled.EventNote,
+                title = "Motivo de la consulta"
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+            OutlinedTextField(
+                value = reason,
+                onValueChange = { reason = it },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(120.dp),
+                placeholder = {
+                    Text(
+                        text = "Describe brevemente el motivo de tu\nconsulta...",
+                        color = Color(0xFFBDBDBD)
+                    )
+                },
+                shape = RoundedCornerShape(12.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = Color(0xFF00BCD4),
+                    unfocusedBorderColor = Color(0xFFE0E0E0)
+                ),
+                maxLines = 5
             )
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(20.dp))
+
+            // Resumen de la cita
+            SummaryCard(
+                date = selectedDate,
+                timeSlot = selectedTimeSlot
+            )
+
+            Spacer(modifier = Modifier.height(20.dp))
 
             Button(
                 onClick = {
-                    val slot = selectedSlot ?: return@Button
-                    val dateTime = LocalDateTime.of(selectedDate, LocalTime.parse(slot.start))
-                    val millis = dateTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
-                    viewModel.scheduleAppointment(
-                        doctorId = doctorIdLong,
-                        dateTimeMillis = millis
-                    )
-                    navController.popBackStack()
+                    val date = selectedDate ?: return@Button
+                    val timeSlot = selectedTimeSlot ?: return@Button
+                    
+                    coroutineScope.launch {
+                        isProcessing = true
+                        
+                        // Simular procesamiento y guardar cita
+                        val dateTime = LocalDateTime.of(date, LocalTime.parse(timeSlot.start))
+                        val millis = dateTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
+                        viewModel.scheduleAppointment(
+                            doctorId = doctorIdLong,
+                            dateTimeMillis = millis
+                        )
+                        
+                        // Esperar 1.5 segundos simulando procesamiento
+                        delay(1500)
+                        
+                        // Mostrar éxito
+                        isProcessing = false
+                        showSuccess = true
+                        
+                        // Esperar 2 segundos mostrando el check
+                        delay(2000)
+                        
+                        // Navegar a la pantalla de citas
+                        navController.navigate(Destination.APPOINTMENTS) {
+                            popUpTo(Destination.HOME) { inclusive = false }
+                        }
+                    }
                 },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
-                enabled = selectedSlot != null,
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00BCD4)),
-                shape = RoundedCornerShape(16.dp)
+                enabled = selectedDate != null && selectedTimeSlot != null && !isProcessing && !showSuccess,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF00BCD4),
+                    disabledContainerColor = Color(0xFFE0E0E0)
+                ),
+                shape = RoundedCornerShape(12.dp)
             ) {
                 Text(
                     text = "Reservar cita",
                     fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White
+                    fontWeight = FontWeight.Bold
                 )
             }
 
@@ -274,6 +366,76 @@ fun ScheduleAppointmentScreen(
             }
 
             Spacer(modifier = Modifier.height(24.dp))
+            }
+        }
+        
+        // Overlay de confirmación - FUERA del Column principal
+        if (isProcessing || showSuccess) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.White),
+                contentAlignment = Alignment.Center
+            ) {
+                Card(
+                    modifier = Modifier
+                        .padding(32.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    shape = RoundedCornerShape(24.dp),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .padding(40.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        if (isProcessing) {
+                            // Mostrar loading
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(64.dp),
+                                color = Color(0xFF00BCD4),
+                                strokeWidth = 6.dp
+                            )
+                            Spacer(modifier = Modifier.height(24.dp))
+                            Text(
+                                text = "Procesando tu cita...",
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = Color(0xFF212121)
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = "Por favor espera un momento",
+                                fontSize = 14.sp,
+                                color = Color(0xFF757575)
+                            )
+                        } else if (showSuccess) {
+                            // Mostrar check de éxito turquesa
+                            Icon(
+                                imageVector = Icons.Filled.CheckCircle,
+                                contentDescription = "Éxito",
+                                tint = Color(0xFF00BCD4),
+                                modifier = Modifier.size(80.dp)
+                            )
+                            Spacer(modifier = Modifier.height(24.dp))
+                            Text(
+                                text = "¡Cita confirmada!",
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF212121)
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = "Tu cita ha sido agendada exitosamente",
+                                fontSize = 14.sp,
+                                color = Color(0xFF757575),
+                                textAlign = TextAlign.Center
+                            )
+                        }
+                    }
+                }
+            }
         }
     }
 }
@@ -289,14 +451,14 @@ private fun DoctorSummaryCard(doctorName: String, specialty: String) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(20.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box(
                 modifier = Modifier
                     .size(60.dp)
                     .clip(CircleShape)
-                    .background(Color(0xFFB2EBF2)),
+                    .background(Color(0xFFE0F7FA)),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
@@ -329,10 +491,23 @@ private fun DoctorSummaryCard(doctorName: String, specialty: String) {
 
 @Composable
 private fun SummaryCard(
-    doctorName: String,
-    date: LocalDate,
-    slot: TimeSlot?
+    date: LocalDate?,
+    timeSlot: TimeSlot?
 ) {
+    // Calcular duración en minutos
+    val duration = if (timeSlot != null) {
+        try {
+            val start = LocalTime.parse(timeSlot.start)
+            val end = LocalTime.parse(timeSlot.end)
+            val durationMinutes = java.time.Duration.between(start, end).toMinutes()
+            "$durationMinutes minutos"
+        } catch (e: Exception) {
+            "30 minutos"
+        }
+    } else {
+        "No seleccionada"
+    }
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = Color(0xFFE0F7FA)),
@@ -360,13 +535,11 @@ private fun SummaryCard(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            SummaryRow(label = "Doctor", value = doctorName)
+            SummaryRow(label = "Fecha", value = date?.format(dateFormatter) ?: "No seleccionada")
             Spacer(modifier = Modifier.height(8.dp))
-            SummaryRow(label = "Fecha", value = dateFormatter.format(date))
+            SummaryRow(label = "Hora", value = timeSlot?.let { "${it.start} - ${it.end}" } ?: "No seleccionada")
             Spacer(modifier = Modifier.height(8.dp))
-            SummaryRow(label = "Hora", value = slot?.start ?: "Selecciona un horario")
-            Spacer(modifier = Modifier.height(8.dp))
-            SummaryRow(label = "Duración", value = "30 minutos")
+            SummaryRow(label = "Duración", value = duration)
         }
     }
 }
@@ -388,6 +561,105 @@ private fun SummaryRow(label: String, value: String) {
             fontSize = 14.sp,
             color = Color(0xFF00838F)
         )
+    }
+}
+
+@Composable
+private fun SectionHeader(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    title: String
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = Color(0xFF00BCD4),
+            modifier = Modifier.size(20.dp)
+        )
+        Text(
+            text = title,
+            fontSize = 15.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = Color(0xFF212121)
+        )
+    }
+}
+
+@Composable
+private fun ModalityChip(
+    text: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    selected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        modifier = modifier
+            .height(48.dp)
+            .clickable(onClick = onClick),
+        shape = RoundedCornerShape(12.dp),
+        color = if (selected) Color(0xFFE0F7FA) else Color.White,
+        border = BorderStroke(
+            width = if (selected) 2.dp else 1.dp,
+            color = if (selected) Color(0xFF00BCD4) else Color(0xFFE0E0E0)
+        )
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = if (selected) Color(0xFF00BCD4) else Color(0xFF757575),
+                modifier = Modifier.size(20.dp)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = text,
+                fontSize = 14.sp,
+                fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
+                color = if (selected) Color(0xFF00838F) else Color(0xFF757575)
+            )
+        }
+    }
+}
+
+@Composable
+private fun TimeChip(
+    timeSlot: TimeSlot,
+    selected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        modifier = modifier
+            .height(48.dp)
+            .clickable(onClick = onClick),
+        shape = RoundedCornerShape(12.dp),
+        color = if (selected) Color(0xFFE0F7FA) else Color.White,
+        border = BorderStroke(
+            width = if (selected) 2.dp else 1.dp,
+            color = if (selected) Color(0xFF00BCD4) else Color(0xFFE0E0E0)
+        )
+    ) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = "${timeSlot.start}-${timeSlot.end}",
+                fontSize = 14.sp,
+                fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
+                color = if (selected) Color(0xFF00838F) else Color(0xFF757575)
+            )
+        }
     }
 }
 
@@ -415,5 +687,17 @@ private fun EmptyScheduleState() {
     }
 }
 
-private val dateFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("dd MMM")
-private val dayFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("EEE")
+private val dateFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("dd MMM yyyy")
+
+private fun isDayAvailable(dayOfWeek: DayOfWeek, availability: List<DayAvailability>): Boolean {
+    val dayAvailability = when (dayOfWeek) {
+        DayOfWeek.MONDAY -> DayAvailability.LUNES
+        DayOfWeek.TUESDAY -> DayAvailability.MARTES
+        DayOfWeek.WEDNESDAY -> DayAvailability.MIERCOLES
+        DayOfWeek.THURSDAY -> DayAvailability.JUEVES
+        DayOfWeek.FRIDAY -> DayAvailability.VIERNES
+        DayOfWeek.SATURDAY -> DayAvailability.SABADO
+        DayOfWeek.SUNDAY -> DayAvailability.DOMINGO
+    }
+    return availability.contains(dayAvailability)
+}

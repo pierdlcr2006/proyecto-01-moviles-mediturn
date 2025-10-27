@@ -165,7 +165,7 @@ private fun DoctorDetailContent(
 
                 // Nombre del doctor
                 Text(
-                    text = "Dra. ${doctor.name} ${doctor.lastname}",
+                    text = "${doctor.name} ${doctor.lastname}",
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color(0xFF212121)
