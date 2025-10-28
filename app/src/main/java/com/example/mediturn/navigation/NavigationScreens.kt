@@ -40,8 +40,8 @@ fun NavController.navigateToDoctorDetail(doctorId: String) {
     navigate(Destination.doctorDetail(doctorId))
 }
 
-fun NavController.navigateToScheduleAppointment(doctorId: String) {
-    navigate(Destination.scheduleAppointment(doctorId))
+fun NavController.navigateToScheduleAppointment(doctorId: String, appointmentId: Long? = null) {
+    navigate(Destination.scheduleAppointment(doctorId, appointmentId))
 }
 
 fun NavController.navigateToNotifications() {

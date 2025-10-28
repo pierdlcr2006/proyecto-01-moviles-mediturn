@@ -98,15 +98,72 @@ class MediturnViewModel(
 
     fun scheduleAppointment(
         doctorId: Long,
-        dateTimeMillis: Long
+        dateTimeMillis: Long,
+        consultationType: String,
+        reason: String,
+        onSuccess: () -> Unit,
+        onError: (String) -> Unit
     ) {
         val patientId = activePatient.value?.id ?: return
         viewModelScope.launch {
-            repository.scheduleAppointment(
-                patientId = patientId,
-                doctorId = doctorId,
-                dateTimeMillis = dateTimeMillis
-            )
+            try {
+                // Validar solapamiento de horarios
+                val hasConflict = repository.hasTimeConflict(patientId, dateTimeMillis)
+                if (hasConflict) {
+                    onError("Ya tienes una cita programada cerca de este horario. Por favor elige otro horario.")
+                    return@launch
+                }
+                
+                // Crear cita
+                repository.scheduleAppointment(
+                    patientId = patientId,
+                    doctorId = doctorId,
+                    dateTimeMillis = dateTimeMillis,
+                    consultationType = consultationType,
+                    reason = reason
+                )
+                onSuccess()
+            } catch (e: Exception) {
+                onError("Error al agendar la cita: ${e.message}")
+            }
+        }
+    }
+
+    fun appointment(appointmentId: Long): Flow<Appointment?> = 
+        repository.observeAppointment(appointmentId)
+
+    fun updateAppointment(
+        appointmentId: Long,
+        newDateTimeMillis: Long,
+        onSuccess: () -> Unit,
+        onError: (String) -> Unit
+    ) {
+        val patientId = activePatient.value?.id ?: return
+        viewModelScope.launch {
+            try {
+                // Validar si se puede reprogramar
+                val (canReschedule, errorMessage) = repository.canRescheduleAppointment(appointmentId)
+                if (!canReschedule) {
+                    onError(errorMessage)
+                    return@launch
+                }
+                
+                // Validar solapamiento de horarios (excluyendo esta cita)
+                val hasConflict = repository.hasTimeConflict(patientId, newDateTimeMillis, appointmentId)
+                if (hasConflict) {
+                    onError("Ya tienes una cita programada cerca de este horario. Por favor elige otro horario.")
+                    return@launch
+                }
+                
+                // Actualizar cita
+                repository.updateAppointment(
+                    appointmentId = appointmentId,
+                    newDateTimeMillis = newDateTimeMillis
+                )
+                onSuccess()
+            } catch (e: Exception) {
+                onError("Error al reprogramar la cita: ${e.message}")
+            }
         }
     }
 

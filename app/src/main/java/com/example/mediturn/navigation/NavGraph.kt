@@ -53,8 +53,8 @@ fun NavGraph(
             AppointmentsScreen(
                 navController = navController,
                 viewModel = viewModel,
-                onScheduleClick = { doctorId ->
-                    navController.navigate(Destination.scheduleAppointment(doctorId.toString()))
+                onScheduleClick = { doctorId, appointmentId ->
+                    navController.navigate(Destination.scheduleAppointment(doctorId.toString(), appointmentId))
                 }
             )
         }
@@ -84,12 +84,21 @@ fun NavGraph(
 
         composable(
             route = Destination.SCHEDULE_APPOINTMENT,
-            arguments = listOf(navArgument("doctorId") { type = NavType.StringType })
+            arguments = listOf(
+                navArgument("doctorId") { type = NavType.StringType },
+                navArgument("appointmentId") { 
+                    type = NavType.StringType
+                    nullable = true
+                    defaultValue = null
+                }
+            )
         ) { backStackEntry ->
             val doctorId = backStackEntry.arguments?.getString("doctorId") ?: ""
+            val appointmentId = backStackEntry.arguments?.getString("appointmentId")
             ScheduleAppointmentScreen(
                 navController = navController,
                 doctorId = doctorId,
+                appointmentId = appointmentId,
                 viewModel = viewModel
             )
         }

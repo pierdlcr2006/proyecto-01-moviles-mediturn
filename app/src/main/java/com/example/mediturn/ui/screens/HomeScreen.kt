@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -201,12 +202,12 @@ private fun SpecialtiesSection(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 24.dp, horizontal = 20.dp),
+                .padding(vertical = 16.dp, horizontal = 20.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Box(
                 modifier = Modifier
-                    .size(70.dp)
+                    .size(60.dp)
                     .background(color = Color(0xFFE0F7FA), shape = CircleShape),
                 contentAlignment = Alignment.Center
             ) {
@@ -269,7 +270,7 @@ private fun CarruselSection() {
         Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(240.dp)
+                .aspectRatio(1f)
                 .clip(RoundedCornerShape(16.dp)),
             elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
         ) {
@@ -277,7 +278,7 @@ private fun CarruselSection() {
                 Image(
                     painter = painterResource(id = images[page]),
                     contentDescription = null,
-                    contentScale = ContentScale.Fit,
+                    contentScale = ContentScale.Crop,
                     modifier = Modifier.fillMaxSize()
                 )
             }
@@ -313,7 +314,7 @@ private fun NextAppointmentCard(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(16.dp),
+                    .padding(20.dp),
                 verticalAlignment = Alignment.Top
             ) {
                 Icon(
@@ -345,7 +346,7 @@ private fun NextAppointmentCard(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(16.dp),
+                    .padding(20.dp),
                 verticalAlignment = Alignment.Top
             ) {
                 Icon(

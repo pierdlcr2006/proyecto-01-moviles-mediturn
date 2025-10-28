@@ -16,6 +16,7 @@ import com.example.mediturn.data.model.TimeSlot
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 import java.util.concurrent.TimeUnit
 
@@ -85,16 +86,31 @@ class MediturnRepository(
     suspend fun scheduleAppointment(
         patientId: Long,
         doctorId: Long,
-        dateTimeMillis: Long
+        dateTimeMillis: Long,
+        consultationType: String = "Presencial",
+        reason: String = ""
     ) = withContext(dispatcher) {
         val appointment = Appointment(
             doctorId = doctorId,
             patientId = patientId,
             dateTime = dateTimeMillis,
             status = AppointmentStatus.CONFIRMED,
-            isPast = false
+            isPast = false,
+            consultationType = consultationType,
+            reason = reason,
+            rescheduleCount = 0
         )
         appointmentDao.upsert(appointment)
+    }
+
+    fun observeAppointment(appointmentId: Long): Flow<Appointment?> = 
+        appointmentDao.observeById(appointmentId)
+
+    suspend fun updateAppointment(
+        appointmentId: Long,
+        newDateTimeMillis: Long
+    ) = withContext(dispatcher) {
+        appointmentDao.updateDateTime(appointmentId, newDateTimeMillis)
     }
 
     suspend fun updateAppointmentStatus(
@@ -115,6 +131,58 @@ class MediturnRepository(
 
     suspend fun markAllNotificationsAsRead(patientId: Long) = withContext(dispatcher) {
         notificationDao.markAllAsRead(patientId = patientId, doctorId = null)
+    }
+
+    // Validaciones
+    suspend fun hasTimeConflict(
+        patientId: Long,
+        newDateTime: Long,
+        excludeAppointmentId: Long? = null
+    ): Boolean = withContext(dispatcher) {
+        val allAppointments = appointmentDao.observeUpcomingByPatient(patientId).first()
+        val appointments = if (excludeAppointmentId != null) {
+            allAppointments.filter { it.id != excludeAppointmentId }
+        } else {
+            allAppointments
+        }
+        
+        // Verificar si hay conflicto (diferencia menor a 1 hora)
+        appointments.any { appointment ->
+            val diff = Math.abs(appointment.dateTime - newDateTime)
+            diff < 3600000 // 1 hora en milisegundos
+        }
+    }
+
+    suspend fun canRescheduleAppointment(appointmentId: Long): Pair<Boolean, String> = withContext(dispatcher) {
+        val appointment = appointmentDao.getById(appointmentId)
+        
+        if (appointment == null) {
+            return@withContext false to "La cita no existe"
+        }
+        
+        // Verificar si ya pasó
+        if (appointment.isPast) {
+            return@withContext false to "No puedes reprogramar una cita que ya pasó"
+        }
+        
+        // Verificar si está cancelada
+        if (appointment.status == AppointmentStatus.CANCELLED) {
+            return@withContext false to "No puedes reprogramar una cita cancelada"
+        }
+        
+        // Verificar límite de reprogramaciones
+        if (appointment.rescheduleCount >= 1) {
+            return@withContext false to "Ya has reprogramado esta cita. Solo se permite una reprogramación"
+        }
+        
+        // Verificar ventana de tiempo (4 horas)
+        val now = System.currentTimeMillis()
+        val hoursUntilAppointment = (appointment.dateTime - now) / (1000 * 60 * 60)
+        if (hoursUntilAppointment < 4) {
+            return@withContext false to "No puedes reprogramar con menos de 4 horas de anticipación"
+        }
+        
+        return@withContext true to ""
     }
 
     private suspend fun seedPatients(): Long {
@@ -187,6 +255,7 @@ class MediturnRepository(
                     DayAvailability.VIERNES
                 ),
                 timeSlot = listOf(
+                    TimeSlot("08:00", "09:00"),
                     TimeSlot("09:00", "09:30"),
                     TimeSlot("10:30", "11:00"),
                     TimeSlot("15:00", "15:30")
@@ -279,7 +348,51 @@ class MediturnRepository(
                     TimeSlot("15:30", "16:00")
                 ),
                 hasTeleconsultation = false
-            )
+            ),
+                    DoctorEntity(
+                    name = "Piero",
+            lastname = "De la cruz",
+            specialtyId = generalId,
+            hospital = "Centro Médico San Rafael",
+            location = "San Isidro, Lima",
+            rating = 4.7,
+            profileImageUrl = "",
+            about = "Médico general enfocado en medicina preventiva y seguimiento de pacientes crónicos.",
+            phone = "+51 955 333 444",
+            availability = listOf(
+                DayAvailability.MARTES,
+                DayAvailability.JUEVES,
+                DayAvailability.SABADO
+            ),
+            timeSlot = listOf(
+                TimeSlot("08:30", "09:00"),
+                TimeSlot("11:00", "11:30"),
+                TimeSlot("16:00", "16:30")
+            ),
+            hasTeleconsultation = true
+        ),
+            DoctorEntity(
+                name = "Antony",
+                lastname = "Cholan",
+                specialtyId = generalId,
+                hospital = "Centro Médico San Rafael",
+                location = "San Isidro, Lima",
+                rating = 4.7,
+                profileImageUrl = "",
+                about = "Médico general enfocado en medicina preventiva y seguimiento de pacientes crónicos.",
+                phone = "+51 955 333 444",
+                availability = listOf(
+                    DayAvailability.MARTES,
+                    DayAvailability.JUEVES,
+                    DayAvailability.SABADO
+                ),
+                timeSlot = listOf(
+                    TimeSlot("08:30", "09:00"),
+                    TimeSlot("11:00", "11:30"),
+                    TimeSlot("16:00", "16:30")
+                ),
+                hasTeleconsultation = true
+            ),
         )
 
         return doctors.map { doctor ->

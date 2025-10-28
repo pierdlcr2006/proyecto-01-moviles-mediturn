@@ -25,7 +25,7 @@ import com.example.mediturn.data.model.converters.MediturnTypeConverters
         Appointment::class,
         Notification::class
     ],
-    version = 1,
+    version = 2,  // Incrementado para agregar campos consultationType, reason, rescheduleCount
     exportSchema = false
 )
 @TypeConverters(MediturnTypeConverters::class)

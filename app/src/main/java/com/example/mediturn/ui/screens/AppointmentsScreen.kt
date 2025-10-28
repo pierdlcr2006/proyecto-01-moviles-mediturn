@@ -24,6 +24,7 @@ import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -38,6 +39,7 @@ import androidx.compose.material3.TabRow
 import androidx.compose.material3.TabRowDefaults
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -54,6 +56,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -74,7 +77,7 @@ import java.time.format.DateTimeFormatter
 fun AppointmentsScreen(
     navController: NavController,
     viewModel: MediturnViewModel,
-    onScheduleClick: (Long) -> Unit
+    onScheduleClick: (Long, Long?) -> Unit  // doctorId, appointmentId?
 ) {
     val upcomingAppointments by viewModel.upcomingAppointments.collectAsStateWithLifecycle()
     val pastAppointments by viewModel.pastAppointments.collectAsStateWithLifecycle()
@@ -84,6 +87,57 @@ fun AppointmentsScreen(
     val pagerState = rememberPagerState(pageCount = { 2 })
     val coroutineScope = rememberCoroutineScope()
     val tabs = listOf("Próximas", "Pasadas")
+    
+    var showCancelDialog by remember { mutableStateOf(false) }
+    var appointmentToCancel by remember { mutableStateOf<Long?>(null) }
+    
+    var showRescheduleBlockedDialog by remember { mutableStateOf(false) }
+
+    // Diálogo de cita ya reprogramada (no se puede volver a reprogramar)
+    if (showRescheduleBlockedDialog) {
+        AlertDialog(
+            onDismissRequest = { showRescheduleBlockedDialog = false },
+            title = { Text("No se puede reprogramar") },
+            text = { Text("Ya has reprogramado esta cita. Solo se permite una reprogramación por cita. Si necesitas hacer cambios, por favor contacta directamente al consultorio.") },
+            confirmButton = {
+                TextButton(
+                    onClick = { showRescheduleBlockedDialog = false },
+                    colors = ButtonDefaults.textButtonColors(contentColor = Color(0xFF00BCD4))
+                ) {
+                    Text("Entendido")
+                }
+            }
+        )
+    }
+
+    // Diálogo de confirmación para cancelar
+    if (showCancelDialog) {
+        AlertDialog(
+            onDismissRequest = { showCancelDialog = false },
+            title = { Text("Cancelar cita") },
+            text = { Text("¿Estás seguro de que deseas cancelar esta cita? Esta acción no se puede deshacer.") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        appointmentToCancel?.let { viewModel.cancelAppointment(it) }
+                        showCancelDialog = false
+                        appointmentToCancel = null
+                    },
+                    colors = ButtonDefaults.textButtonColors(contentColor = Color(0xFFFF6B6B))
+                ) {
+                    Text("Cancelar cita")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { showCancelDialog = false },
+                    colors = ButtonDefaults.textButtonColors(contentColor = Color(0xFF00BCD4))
+                ) {
+                    Text("No, mantener")
+                }
+            }
+        )
+    }
 
     Column(
         modifier = Modifier
@@ -92,14 +146,14 @@ fun AppointmentsScreen(
     ) {
         TopAppBar(
             title = {
-                BoxFilledCenter {
-                    Text(
-                        text = "Mis Citas",
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFF212121)
-                    )
-                }
+                Text(
+                    text = "Mis Citas",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF212121),
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
+                )
             },
             navigationIcon = {
                 IconButton(onClick = { navController.popBackStack() }) {
@@ -109,6 +163,10 @@ fun AppointmentsScreen(
                         tint = Color(0xFF212121)
                     )
                 }
+            },
+            actions = {
+                // Spacer para equilibrar el navigationIcon y centrar el título
+                Spacer(modifier = Modifier.width(48.dp))
             },
             colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
         )
@@ -158,15 +216,26 @@ fun AppointmentsScreen(
                     doctorMap = doctorMap,
                     specialtyMap = specialtyMap,
                     isUpcoming = true,
-                    onSchedule = onScheduleClick,
-                    onCancel = { appointmentId -> viewModel.cancelAppointment(appointmentId) }
+                    onSchedule = { doctorId, appointmentId ->
+                        // Validar si la cita ya fue reprogramada
+                        val appointment = upcomingAppointments.firstOrNull { it.id == appointmentId }
+                        if (appointment != null && appointment.rescheduleCount >= 1) {
+                            showRescheduleBlockedDialog = true
+                        } else {
+                            onScheduleClick(doctorId, appointmentId)
+                        }
+                    },
+                    onCancel = { appointmentId ->
+                        appointmentToCancel = appointmentId
+                        showCancelDialog = true
+                    }
                 )
                 1 -> AppointmentList(
                     appointments = pastAppointments,
                     doctorMap = doctorMap,
                     specialtyMap = specialtyMap,
                     isUpcoming = false,
-                    onSchedule = {},
+                    onSchedule = { _, _ -> },  // No permitir reprogramar citas pasadas
                     onCancel = {}
                 )
             }
@@ -180,7 +249,7 @@ private fun AppointmentList(
     doctorMap: Map<Long, DoctorEntity>,
     specialtyMap: Map<Long, EspecialityEntity>,
     isUpcoming: Boolean,
-    onSchedule: (Long) -> Unit,
+    onSchedule: (Long, Long?) -> Unit,  // doctorId, appointmentId?
     onCancel: (Long) -> Unit
 ) {
     if (appointments.isEmpty()) {
@@ -218,7 +287,7 @@ private fun AppointmentCard(
     doctor: DoctorEntity?,
     specialtyName: String,
     isUpcoming: Boolean,
-    onSchedule: (Long) -> Unit,
+    onSchedule: (Long, Long?) -> Unit,  // doctorId, appointmentId?
     onCancel: (Long) -> Unit
 ) {
     Card(
@@ -321,7 +390,7 @@ private fun AppointmentCard(
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Button(
-                        onClick = { onSchedule(doctor.id) },
+                        onClick = { onSchedule(doctor.id, appointment.id) },  // Pasar appointmentId
                         modifier = Modifier.weight(1f),
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00BCD4)),
                         shape = RoundedCornerShape(24.dp)

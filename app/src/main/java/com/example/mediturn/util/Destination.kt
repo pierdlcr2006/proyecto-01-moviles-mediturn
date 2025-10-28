@@ -8,9 +8,11 @@ object Destination {
     const val SPECIALTIES = "specialties"
     const val EDIT_PROFILE = "edit_profile"
     const val DOCTOR_DETAIL = "doctor_detail/{doctorId}"
-    const val SCHEDULE_APPOINTMENT = "schedule_appointment/{doctorId}"
+    const val SCHEDULE_APPOINTMENT = "schedule_appointment/{doctorId}?appointmentId={appointmentId}"
     const val NOTIFICATIONS = "notifications"
     
     fun doctorDetail(doctorId: String) = "doctor_detail/$doctorId"
-    fun scheduleAppointment(doctorId: String) = "schedule_appointment/$doctorId"
+    fun scheduleAppointment(doctorId: String, appointmentId: Long? = null) = 
+        if (appointmentId != null) "schedule_appointment/$doctorId?appointmentId=$appointmentId"
+        else "schedule_appointment/$doctorId"
 }

@@ -67,6 +67,17 @@ interface AppointmentDao {
         isPast: Boolean
     )
 
+    @Query(
+        "UPDATE appointments SET dateTime = :newDateTimeMillis, " +
+            "rescheduleCount = rescheduleCount + 1, " +
+            "status = 'RESCHEDULED' " +
+            "WHERE id = :appointmentId"
+    )
+    suspend fun updateDateTime(
+        appointmentId: Long,
+        newDateTimeMillis: Long
+    )
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsert(appointment: Appointment): Long
 

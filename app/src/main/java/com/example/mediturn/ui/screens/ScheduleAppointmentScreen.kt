@@ -27,6 +27,7 @@ import androidx.compose.material.icons.filled.EventNote
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Videocam
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -81,10 +82,17 @@ import java.util.Calendar
 fun ScheduleAppointmentScreen(
     navController: NavController,
     doctorId: String,
+    appointmentId: String?,  // Nuevo parámetro opcional
     viewModel: MediturnViewModel
 ) {
     val doctorIdLong = doctorId.toLongOrNull() ?: -1L
+    val appointmentIdLong = appointmentId?.toLongOrNull()
+    val isRescheduling = appointmentIdLong != null
+    
     val doctor by viewModel.doctor(doctorIdLong).collectAsStateWithLifecycle(initialValue = null)
+    val existingAppointment by viewModel.appointment(appointmentIdLong ?: -1L)
+        .collectAsStateWithLifecycle(initialValue = null)
+    
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
 
@@ -94,6 +102,22 @@ fun ScheduleAppointmentScreen(
     var reason by remember { mutableStateOf("") }
     var isProcessing by remember { mutableStateOf(false) }
     var showSuccess by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+    
+    // Cargar datos de la cita existente si es reprogramación
+    LaunchedEffect(existingAppointment) {
+        existingAppointment?.let { appointment ->
+            val instant = java.time.Instant.ofEpochMilli(appointment.dateTime)
+            val dateTime = java.time.LocalDateTime.ofInstant(instant, java.time.ZoneId.systemDefault())
+            selectedDate = dateTime.toLocalDate()
+            selectedTimeSlot = TimeSlot(
+                start = dateTime.toLocalTime().format(java.time.format.DateTimeFormatter.ofPattern("HH:mm")),
+                end = dateTime.plusMinutes(45).toLocalTime().format(java.time.format.DateTimeFormatter.ofPattern("HH:mm"))
+            )
+            consultationType = appointment.consultationType
+            reason = appointment.reason
+        }
+    }
 
     Box(modifier = Modifier.fillMaxSize()) {
         Column(
@@ -104,10 +128,12 @@ fun ScheduleAppointmentScreen(
         TopAppBar(
             title = {
                 Text(
-                    text = "Agendar Cita",
+                    text = if (isRescheduling) "Reprogramar Cita" else "Agendar Cita",
                     fontSize = 18.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = Color(0xFF212121)
+                    color = Color(0xFF212121),
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
                 )
             },
             navigationIcon = {
@@ -118,6 +144,10 @@ fun ScheduleAppointmentScreen(
                         tint = Color(0xFF212121)
                     )
                 }
+            },
+            actions = {
+                // Spacer para equilibrar el navigationIcon y centrar el título
+                Spacer(modifier = Modifier.width(48.dp))
             },
             colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
         )
@@ -295,35 +325,110 @@ fun ScheduleAppointmentScreen(
 
             Spacer(modifier = Modifier.height(20.dp))
 
+            // Mostrar mensaje de error si existe
+            errorMessage?.let { error ->
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFFFFEBEE)),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Warning,
+                            contentDescription = "Error",
+                            tint = Color(0xFFD32F2F),
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = error,
+                            fontSize = 13.sp,
+                            color = Color(0xFFD32F2F)
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.height(12.dp))
+            }
+
             Button(
                 onClick = {
                     val date = selectedDate ?: return@Button
                     val timeSlot = selectedTimeSlot ?: return@Button
                     
+                    // Validar campos requeridos
+                    if (reason.trim().length < 5) {
+                        errorMessage = "El motivo debe tener al menos 5 caracteres"
+                        return@Button
+                    }
+                    
+                    if (reason.trim().length > 200) {
+                        errorMessage = "El motivo no puede exceder 200 caracteres"
+                        return@Button
+                    }
+                    
                     coroutineScope.launch {
                         isProcessing = true
+                        errorMessage = null
                         
-                        // Simular procesamiento y guardar cita
                         val dateTime = LocalDateTime.of(date, LocalTime.parse(timeSlot.start))
                         val millis = dateTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
-                        viewModel.scheduleAppointment(
-                            doctorId = doctorIdLong,
-                            dateTimeMillis = millis
-                        )
                         
-                        // Esperar 1.5 segundos simulando procesamiento
-                        delay(1500)
+                        // Validar fecha futura
+                        if (millis <= System.currentTimeMillis()) {
+                            isProcessing = false
+                            errorMessage = "Debes seleccionar una fecha y hora futura"
+                            return@launch
+                        }
                         
-                        // Mostrar éxito
-                        isProcessing = false
-                        showSuccess = true
-                        
-                        // Esperar 2 segundos mostrando el check
-                        delay(2000)
-                        
-                        // Navegar a la pantalla de citas
-                        navController.navigate(Destination.APPOINTMENTS) {
-                            popUpTo(Destination.HOME) { inclusive = false }
+                        if (isRescheduling && appointmentIdLong != null) {
+                            // Reprogramar cita existente
+                            viewModel.updateAppointment(
+                                appointmentId = appointmentIdLong,
+                                newDateTimeMillis = millis,
+                                onSuccess = {
+                                    coroutineScope.launch {
+                                        delay(1500)
+                                        isProcessing = false
+                                        showSuccess = true
+                                        delay(2000)
+                                        navController.navigate(Destination.APPOINTMENTS) {
+                                            popUpTo(Destination.HOME) { inclusive = false }
+                                        }
+                                    }
+                                },
+                                onError = { error ->
+                                    isProcessing = false
+                                    errorMessage = error
+                                }
+                            )
+                        } else {
+                            // Crear nueva cita
+                            viewModel.scheduleAppointment(
+                                doctorId = doctorIdLong,
+                                dateTimeMillis = millis,
+                                consultationType = consultationType,
+                                reason = reason.trim(),
+                                onSuccess = {
+                                    coroutineScope.launch {
+                                        delay(1500)
+                                        isProcessing = false
+                                        showSuccess = true
+                                        delay(2000)
+                                        navController.navigate(Destination.APPOINTMENTS) {
+                                            popUpTo(Destination.HOME) { inclusive = false }
+                                        }
+                                    }
+                                },
+                                onError = { error ->
+                                    isProcessing = false
+                                    errorMessage = error
+                                }
+                            )
                         }
                     }
                 },
@@ -338,7 +443,7 @@ fun ScheduleAppointmentScreen(
                 shape = RoundedCornerShape(12.dp)
             ) {
                 Text(
-                    text = "Reservar cita",
+                    text = if (isRescheduling) "Reprogramar cita" else "Reservar cita",
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold
                 )
@@ -399,7 +504,7 @@ fun ScheduleAppointmentScreen(
                             )
                             Spacer(modifier = Modifier.height(24.dp))
                             Text(
-                                text = "Procesando tu cita...",
+                                text = if (isRescheduling) "Reprogramando tu cita..." else "Procesando tu cita...",
                                 fontSize = 18.sp,
                                 fontWeight = FontWeight.SemiBold,
                                 color = Color(0xFF212121)
@@ -420,14 +525,14 @@ fun ScheduleAppointmentScreen(
                             )
                             Spacer(modifier = Modifier.height(24.dp))
                             Text(
-                                text = "¡Cita confirmada!",
+                                text = if (isRescheduling) "¡Cita reprogramada!" else "¡Cita confirmada!",
                                 fontSize = 20.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = Color(0xFF212121)
                             )
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(
-                                text = "Tu cita ha sido agendada exitosamente",
+                                text = if (isRescheduling) "Tu cita ha sido reprogramada exitosamente" else "Tu cita ha sido agendada exitosamente",
                                 fontSize = 14.sp,
                                 color = Color(0xFF757575),
                                 textAlign = TextAlign.Center

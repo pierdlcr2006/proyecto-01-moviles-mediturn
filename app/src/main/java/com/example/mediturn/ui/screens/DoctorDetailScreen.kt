@@ -84,7 +84,9 @@ fun DoctorDetailScreen(
                     text = "Detalles del Doctor",
                     fontSize = 18.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = Color(0xFF212121)
+                    color = Color(0xFF212121),
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
                 )
             },
             navigationIcon = {
@@ -95,6 +97,10 @@ fun DoctorDetailScreen(
                         tint = Color(0xFF212121)
                     )
                 }
+            },
+            actions = {
+                // Spacer para equilibrar el navigationIcon y centrar el título
+                Spacer(modifier = Modifier.width(48.dp))
             },
             colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
         )

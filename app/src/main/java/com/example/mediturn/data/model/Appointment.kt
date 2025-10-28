@@ -28,7 +28,10 @@ data class Appointment(
     val patientId: Long,
     val dateTime: Long, // Timestamp en milisegundos
     val status: AppointmentStatus,
-    val isPast: Boolean
+    val isPast: Boolean,
+    val consultationType: String = "Presencial", // "Presencial" o "Teleconsulta"
+    val reason: String = "",
+    val rescheduleCount: Int = 0
 )
 
 enum class AppointmentStatus {

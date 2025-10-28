@@ -79,7 +79,9 @@ fun ProfileScreen(
                     text = "Mi Perfil",
                     fontSize = 18.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = Color(0xFF212121)
+                    color = Color(0xFF212121),
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
                 )
             },
             navigationIcon = {
@@ -90,6 +92,10 @@ fun ProfileScreen(
                         tint = Color(0xFF212121)
                     )
                 }
+            },
+            actions = {
+                // Spacer para equilibrar el navigationIcon y centrar el título
+                Spacer(modifier = Modifier.width(48.dp))
             },
             colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
         )
@@ -320,6 +326,10 @@ fun EditProfileScreen(
                     )
                 }
             },
+            actions = {
+                // Spacer para equilibrar el navigationIcon y centrar el título
+                Spacer(modifier = Modifier.width(48.dp))
+            },
             colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
         )
 
@@ -375,7 +385,8 @@ fun EditProfileScreen(
                 label = "Nombre completo",
                 value = fullName,
                 onValueChange = { fullName = it },
-                placeholder = "María González"
+                placeholder = "María González",
+                enabled = false  // Nombre no editable
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -464,7 +475,8 @@ private fun EditProfileTextField(
     value: String,
     onValueChange: (String) -> Unit,
     placeholder: String = "",
-    minLines: Int = 1
+    minLines: Int = 1,
+    enabled: Boolean = true
 ) {
     Column(modifier = Modifier.fillMaxWidth()) {
         Text(
@@ -478,6 +490,7 @@ private fun EditProfileTextField(
             value = value,
             onValueChange = onValueChange,
             modifier = Modifier.fillMaxWidth(),
+            enabled = enabled,
             placeholder = {
                 Text(
                     text = placeholder,
@@ -488,8 +501,11 @@ private fun EditProfileTextField(
             colors = OutlinedTextFieldDefaults.colors(
                 focusedBorderColor = Color(0xFF00BCD4),
                 unfocusedBorderColor = Color(0xFFE0E0E0),
+                disabledBorderColor = Color(0xFFE0E0E0),
                 focusedContainerColor = Color(0xFFFAFAFA),
-                unfocusedContainerColor = Color(0xFFFAFAFA)
+                unfocusedContainerColor = Color(0xFFFAFAFA),
+                disabledContainerColor = Color(0xFFF5F5F5),
+                disabledTextColor = Color(0xFF757575)
             ),
             shape = RoundedCornerShape(12.dp),
             minLines = minLines,
