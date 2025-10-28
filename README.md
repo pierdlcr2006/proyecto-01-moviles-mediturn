@@ -244,68 +244,84 @@ Aplicación con estructura Material 3 sin conexión a datos reales.
 -- --
 -- --
 
-INFORME DÍA 5: FUNCIONALIDADES CLAVE Y PULIDO
-🎯[OBJETIVO DEL DÍA 5]
-Implementar búsquedas, filtros, validaciones y gestión completa de citas (crear, reprogramar, cancelar). Probar la aplicación y revisar el código para asegurar calidad y robustez.
+# INFORME DÍA 5: FUNCIONALIDADES CLAVE Y PULIDO
 
-TRABAJO REALIZADO
+## 🎯 OBJETIVO DEL DÍA 5
+Implementar búsquedas, filtros, validaciones y gestión completa de citas (crear, reprogramar, cancelar).  
+Probar la aplicación y revisar el código para asegurar calidad y robustez.
+
+---
+
 ## 1. MODELO DE DATOS ACTUALIZADO
-Archivo: 
-Appointment.kt
+**Archivo:** `Appointment.kt`
 
-Agregados campos: consultationType (Presencial/Teleconsulta), reason (motivo de la cita), rescheduleCount (contador de reprogramaciones)
-Valores por defecto configurados para no romper base de datos existente
-Versión de BD incrementada a 2 con migración destructiva automática
+- Agregados campos:
+  - `consultationType` (Presencial / Teleconsulta)
+  - `reason` (Motivo de la cita)
+  - `rescheduleCount` (Contador de reprogramaciones)
+- Valores por defecto configurados para mantener compatibilidad con la base de datos existente.  
+- Versión de BD incrementada a **2** con migración destructiva automática.
+
+---
+
 ## 2. VALIDACIONES DE CITAS
-2.1 Crear Cita (Agendar)
-Validaciones implementadas:
 
-Campo motivo: mínimo 5 caracteres, máximo 200 caracteres
-Fecha y hora futuras (no permitir fechas pasadas)
-Detección de solapes: no permitir agendar si ya existe cita en ventana de 1 hora
-Validación de disponibilidad del doctor (implementada en UI)
-Guardado de modalidad (Presencial/Teleconsulta) y motivo
-Manejo de errores:
+### 2.1 Crear Cita (Agendar)
+**Validaciones implementadas:**
+- Campo motivo: mínimo **5** caracteres, máximo **200** caracteres.  
+- Fecha y hora futuras (no permitir fechas pasadas).  
+- Detección de solapes: no permitir agendar si ya existe cita en ventana de **1 hora**.  
+- Validación de disponibilidad del doctor (implementada en UI).  
+- Guardado de modalidad (Presencial / Teleconsulta) y motivo.
 
-Mensajes claros en card roja con ícono de advertencia
-Botón deshabilitado hasta completar campos requeridos
-Feedback visual inmediato
-2.2 Reprogramar Cita
-Validaciones implementadas:
+**Manejo de errores:**
+- Mensajes claros en card roja con ícono de advertencia.  
+- Botón deshabilitado hasta completar los campos requeridos.  
+- Feedback visual inmediato.
 
-Límite de 1 reprogramación por cita (rescheduleCount <= 1)
-Ventana de tiempo: no permitir reprogramar con menos de 12 horas de anticipación
-No reprogramar citas pasadas o canceladas
-Detección de solapes (excluyendo la cita actual)
-Fecha futura obligatoria
-Prefill automático de datos existentes (fecha, hora, modalidad, motivo)
-Contador de reprogramaciones:
+---
 
-Se incrementa automáticamente en BD al reprogramar
-Estado cambia a RESCHEDULED en la BD
-2.3 Cancelar Cita
-Validaciones implementadas:
+### 2.2 Reprogramar Cita
+**Validaciones implementadas:**
+- Límite de **1** reprogramación por cita (`rescheduleCount <= 1`).  
+- Ventana de tiempo: no permitir reprogramar con menos de **12 horas** de anticipación.  
+- No reprogramar citas pasadas o canceladas.  
+- Detección de solapes (excluyendo la cita actual).  
+- Fecha futura obligatoria.  
+- Prefill automático de datos existentes (fecha, hora, modalidad, motivo).
 
-Diálogo de confirmación obligatorio antes de cancelar
-Solo permitido en citas próximas (no pasadas)
-Botón de confirmación en rojo para indicar acción destructiva
-Opción de "No, mantener" para cancelar la acción
+**Contador de reprogramaciones:**
+- Se incrementa automáticamente en BD al reprogramar.  
+- Estado cambia a **RESCHEDULED** en la base de datos.
+
+---
+
+### 2.3 Cancelar Cita
+**Validaciones implementadas:**
+- Diálogo de confirmación obligatorio antes de cancelar.  
+- Solo permitido en citas próximas (no pasadas).  
+- Botón de confirmación en rojo para indicar acción destructiva.  
+- Opción de “No, mantener” para cancelar la acción.
+
+---
+
 ## 3. REPOSITORY Y DAO ACTUALIZADOS
-Nuevos métodos en Repository:
-hasTimeConflict()
-: Verifica solapes de horario (ventana de 1 hora)
-canRescheduleAppointment()
-: Valida todas las reglas de reprogramación
-scheduleAppointment()
-: Actualizado para recibir consultationType y reason
-updateAppointment()
-: Solo actualiza fecha/hora e incrementa rescheduleCount
-Nuevos métodos en DAO:
-updateDateTime()
-: Actualiza fecha, incrementa contador y cambia status a RESCHEDULED
+
+**Nuevos métodos en Repository:**
+- `hasTimeConflict()` → Verifica solapes de horario (ventana de 1 hora).  
+- `canRescheduleAppointment()` → Valida todas las reglas de reprogramación.  
+- `scheduleAppointment()` → Actualizado para recibir `consultationType` y `reason`.  
+- `updateAppointment()` → Solo actualiza fecha/hora e incrementa `rescheduleCount`.
+
+**Nuevos métodos en DAO:**
+- `updateDateTime()` → Actualiza fecha, incrementa contador y cambia estado a `RESCHEDULED`.
+
+---
+
 ## 4. VIEWMODEL CON CALLBACKS
-Firmas actualizadas:
-kotlin
+
+**Firmas actualizadas:**
+```kotlin
 fun scheduleAppointment(
     doctorId, dateTimeMillis, consultationType, reason,
     onSuccess: () -> Unit,
@@ -317,6 +333,7 @@ fun updateAppointment(
     onSuccess: () -> Unit,
     onError: (String) -> Unit
 )
+
 Validaciones ejecutadas en ViewModel:
 
 Verifica solapes antes de crear/actualizar
