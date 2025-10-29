@@ -226,7 +226,7 @@ Se utilizaron componentes nativos de Compose y principios de diseño responsivo 
 Se implementó **Material Design 3** para lograr una apariencia moderna y consistente en toda la aplicación:
 
 **Elementos de diseño:**
-- ✓ Paleta de colores definida en Figma
+- ✓ Paleta de colores definida en Figma || #40e0d0 (turquesa)
 - ✓ Tipografía Material (headline, body, label)
 - ✓ Espaciado consistente (8dp, 16dp, 24dp)
 - ✓ Elevación y sombras según Material 3
