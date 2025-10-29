@@ -89,7 +89,7 @@ fun SearchScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFFAFAFA))
+            .background(MaterialTheme.colorScheme.background)
     ) {
         TopAppBar(
             title = {
@@ -110,11 +110,11 @@ fun SearchScreen(
                     Icon(
                         imageVector = Icons.Filled.ArrowBack,
                         contentDescription = "Volver",
-                        tint = Color(0xFF212121)
+                        tint = MaterialTheme.colorScheme.onSurface
                     )
                 }
             },
-            colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
+            colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface)
         )
 
         Row(
@@ -147,8 +147,8 @@ fun SearchScreen(
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = Color(0xFF00BCD4),
                     unfocusedBorderColor = Color(0xFFE0E0E0),
-                    focusedContainerColor = Color.White,
-                    unfocusedContainerColor = Color.White
+                    focusedContainerColor = MaterialTheme.colorScheme.surface,
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surface
                 ),
                 singleLine = true
             )
@@ -162,7 +162,7 @@ fun SearchScreen(
                 Icon(
                     imageVector = Icons.Filled.FilterList,
                     contentDescription = "Filtrar",
-                    tint = Color.White,
+                    tint = MaterialTheme.colorScheme.surface,
                     modifier = Modifier.size(24.dp)
                 )
             }
@@ -214,7 +214,7 @@ private fun FilterDialog(
                 text = "Filtrar por especialidad",
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color(0xFF212121)
+                color = MaterialTheme.colorScheme.onSurface
             )
         },
         text = {
@@ -240,7 +240,7 @@ private fun FilterDialog(
                             selectedContainerColor = Color(0xFFE0F7FA),
                             selectedLabelColor = Color(0xFF00838F),
                             containerColor = Color(0xFFF5F5F5),
-                            labelColor = Color(0xFF757575)
+                            labelColor = MaterialTheme.colorScheme.onSurfaceVariant
                         ),
                         border = FilterChipDefaults.filterChipBorder(
                             enabled = true,
@@ -270,12 +270,12 @@ private fun FilterDialog(
             ) {
                 Text(
                     text = "Cerrar",
-                    color = Color(0xFF757575),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontWeight = FontWeight.Medium
                 )
             }
         },
-        containerColor = Color.White,
+        containerColor = MaterialTheme.colorScheme.surface,
         shape = RoundedCornerShape(20.dp)
     )
 }
@@ -293,7 +293,7 @@ private fun DoctorsList(
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFFAFAFA))
+            .background(MaterialTheme.colorScheme.background)
             .padding(horizontal = 20.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
@@ -318,7 +318,7 @@ private fun DoctorCard(
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(
@@ -348,7 +348,7 @@ private fun DoctorCard(
                 text = "Dr. ${doctor.name} ${doctor.lastname}",
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color(0xFF212121),
+                color = MaterialTheme.colorScheme.onSurface,
                 textAlign = TextAlign.Center
             )
 
@@ -367,7 +367,7 @@ private fun DoctorCard(
             Text(
                 text = doctor.location,
                 fontSize = 13.sp,
-                color = Color(0xFF757575),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center
             )
 
@@ -383,7 +383,7 @@ private fun DoctorCard(
                     text = "Ver detalle",
                     fontSize = 13.sp,
                     fontWeight = FontWeight.Medium,
-                    color = Color.White,
+                    color = MaterialTheme.colorScheme.surface,
                     modifier = Modifier.padding(horizontal = 12.dp, vertical = 2.dp)
                 )
             }
@@ -411,7 +411,7 @@ private fun EmptyState() {
         Text(
             text = "Intenta con otra especialidad o doctor",
             fontSize = 14.sp,
-            color = Color(0xFF757575),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center
         )
     }

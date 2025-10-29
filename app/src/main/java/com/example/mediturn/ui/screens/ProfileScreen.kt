@@ -22,9 +22,11 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.CameraAlt
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -45,6 +47,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -57,6 +60,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.mediturn.ui.MediturnViewModel
+import kotlinx.coroutines.launch
 import com.example.mediturn.util.Destination
 
 @Composable
@@ -71,7 +75,7 @@ fun ProfileScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFFAFAFA))
+            .background(MaterialTheme.colorScheme.background)
     ) {
         TopAppBar(
             title = {
@@ -79,7 +83,7 @@ fun ProfileScreen(
                     text = "Mi Perfil",
                     fontSize = 18.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = Color(0xFF212121),
+                    color = MaterialTheme.colorScheme.onSurface,
                     textAlign = TextAlign.Center,
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -89,7 +93,7 @@ fun ProfileScreen(
                     Icon(
                         imageVector = Icons.Filled.ArrowBack,
                         contentDescription = "Volver",
-                        tint = Color(0xFF212121)
+                        tint = MaterialTheme.colorScheme.onSurface
                     )
                 }
             },
@@ -97,7 +101,7 @@ fun ProfileScreen(
                 // Spacer para equilibrar el navigationIcon y centrar el título
                 Spacer(modifier = Modifier.width(48.dp))
             },
-            colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
+            colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface)
         )
 
         Column(
@@ -132,7 +136,7 @@ fun ProfileScreen(
                 text = patient?.fullName.orEmpty().ifBlank { "Usuario MediTurn" },
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color(0xFF212121)
+                color = MaterialTheme.colorScheme.onSurface
             )
 
             Spacer(modifier = Modifier.height(4.dp))
@@ -141,7 +145,7 @@ fun ProfileScreen(
             Text(
                 text = patient?.email.orEmpty(),
                 fontSize = 14.sp,
-                color = Color(0xFF757575)
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
             Spacer(modifier = Modifier.height(32.dp))
@@ -149,7 +153,7 @@ fun ProfileScreen(
             // Card de opciones
             ProfileMenuCard(
                 onEditProfile = { navController.navigate(Destination.EDIT_PROFILE) },
-                onSettings = { /* TODO: Agregar navegación a configuración */ },
+                onSettings = { navController.navigate(Destination.SETTINGS) },
                 onLogout = { /* TODO: Implementar cerrar sesión */ }
             )
 
@@ -174,7 +178,7 @@ fun ProfileScreen(
                             text = "M",
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Bold,
-                            color = Color.White
+                            color = MaterialTheme.colorScheme.surface
                         )
                     }
                     Spacer(modifier = Modifier.width(8.dp))
@@ -182,7 +186,7 @@ fun ProfileScreen(
                         text = "MediTurn",
                         fontSize = 16.sp,
                         fontWeight = FontWeight.SemiBold,
-                        color = Color(0xFF212121)
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                 }
                 Spacer(modifier = Modifier.height(4.dp))
@@ -204,7 +208,7 @@ private fun ProfileMenuCard(
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         shape = RoundedCornerShape(12.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
@@ -264,7 +268,7 @@ private fun ProfileMenuItem(
             text = title,
             fontSize = 15.sp,
             fontWeight = FontWeight.Normal,
-            color = Color(0xFF212121)
+            color = MaterialTheme.colorScheme.onSurface
         )
 
         Spacer(modifier = Modifier.weight(1f))
@@ -291,6 +295,10 @@ fun EditProfileScreen(
     var email by remember { mutableStateOf("") }
     var phone by remember { mutableStateOf("") }
     var address by remember { mutableStateOf("") }
+    var emailError by remember { mutableStateOf<String?>(null) }
+    var phoneError by remember { mutableStateOf<String?>(null) }
+    var showSuccess by remember { mutableStateOf(false) }
+    val coroutineScope = rememberCoroutineScope()
 
     LaunchedEffect(patient) {
         patient?.let {
@@ -304,7 +312,7 @@ fun EditProfileScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.White)
+            .background(MaterialTheme.colorScheme.surface)
     ) {
         TopAppBar(
             title = {
@@ -312,7 +320,7 @@ fun EditProfileScreen(
                     text = "Editar Perfil",
                     fontSize = 18.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = Color(0xFF212121),
+                    color = MaterialTheme.colorScheme.onSurface,
                     textAlign = TextAlign.Center,
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -322,7 +330,7 @@ fun EditProfileScreen(
                     Icon(
                         imageVector = Icons.Filled.ArrowBack,
                         contentDescription = "Volver",
-                        tint = Color(0xFF212121)
+                        tint = MaterialTheme.colorScheme.onSurface
                     )
                 }
             },
@@ -330,7 +338,7 @@ fun EditProfileScreen(
                 // Spacer para equilibrar el navigationIcon y centrar el título
                 Spacer(modifier = Modifier.width(48.dp))
             },
-            colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
+            colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface)
         )
 
         Column(
@@ -348,7 +356,7 @@ fun EditProfileScreen(
                     modifier = Modifier
                         .size(120.dp)
                         .clip(CircleShape)
-                        .border(4.dp, Color.White, CircleShape)
+                        .border(4.dp, MaterialTheme.colorScheme.surface, CircleShape)
                         .background(Color(0xFFE0F7FA)),
                     contentAlignment = Alignment.Center
                 ) {
@@ -372,7 +380,7 @@ fun EditProfileScreen(
                     Icon(
                         imageVector = Icons.Filled.CameraAlt,
                         contentDescription = "Cambiar foto",
-                        tint = Color.White,
+                        tint = MaterialTheme.colorScheme.surface,
                         modifier = Modifier.size(20.dp)
                     )
                 }
@@ -394,8 +402,18 @@ fun EditProfileScreen(
             EditProfileTextField(
                 label = "Correo electrónico",
                 value = email,
-                onValueChange = { email = it },
-                placeholder = "maria.gonzalez@email.com"
+                onValueChange = { 
+                    email = it
+                    // Validar en tiempo real
+                    emailError = if (it.isNotEmpty() && !it.contains("@")) {
+                        "El correo debe contener @"
+                    } else {
+                        null
+                    }
+                },
+                placeholder = "maria.gonzalez@email.com",
+                keyboardType = androidx.compose.ui.text.input.KeyboardType.Email,
+                errorMessage = emailError
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -403,8 +421,22 @@ fun EditProfileScreen(
             EditProfileTextField(
                 label = "Número de teléfono",
                 value = phone,
-                onValueChange = { phone = it },
-                placeholder = "+51 961 345 678"
+                onValueChange = { newValue ->
+                    // Solo permitir números y limitar a 9 dígitos
+                    val filtered = newValue.filter { it.isDigit() }.take(9)
+                    phone = filtered
+                    
+                    // Validar en tiempo real
+                    phoneError = when {
+                        filtered.isEmpty() -> null
+                        !filtered.startsWith("9") -> "El teléfono debe empezar con 9"
+                        filtered.length < 9 -> "El teléfono debe tener 9 dígitos"
+                        else -> null
+                    }
+                },
+                placeholder = "961345678",
+                keyboardType = androidx.compose.ui.text.input.KeyboardType.Phone,
+                errorMessage = phoneError
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -417,30 +449,105 @@ fun EditProfileScreen(
                 minLines = 3
             )
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // Mostrar mensaje de éxito si existe
+            if (showSuccess) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFFE0F7FA)),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.CheckCircle,
+                            contentDescription = "Éxito",
+                            tint = Color(0xFF00BCD4),
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "✓ Perfil actualizado",
+                            fontSize = 13.sp,
+                            color = Color(0xFF00BCD4),
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.height(12.dp))
+            }
+
+            // Verificar si hay errores en los campos
+            val hasValidationErrors = emailError != null || phoneError != null
 
             // Botón Guardar cambios
             Button(
                 onClick = {
+                    // Validar que no haya errores en los campos
+                    var hasErrors = false
+                    
+                    // Validar correo
+                    if (email.isEmpty() || !email.contains("@")) {
+                        emailError = "El correo debe contener @"
+                        hasErrors = true
+                    }
+                    
+                    // Validar teléfono
+                    if (phone.length != 9) {
+                        phoneError = "El teléfono debe tener 9 dígitos"
+                        hasErrors = true
+                    } else if (!phone.startsWith("9")) {
+                        phoneError = "El teléfono debe empezar con 9"
+                        hasErrors = true
+                    }
+                    
+                    // Si hay errores, no continuar
+                    if (hasErrors) {
+                        return@Button
+                    }
+                    
+                    // Si todo está bien, guardar
                     viewModel.updatePatientProfile(
                         fullName = fullName,
                         email = email,
                         phone = phone,
                         address = address
                     )
-                    navController.popBackStack()
+                    
+                    // Mostrar éxito
+                    showSuccess = true
+                    
+                    // Navegar después de 1.5 segundos
+                    coroutineScope.launch {
+                        kotlinx.coroutines.delay(1500)
+                        navController.popBackStack()
+                    }
                 },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(56.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00BCD4)),
+                    .height(56.dp)
+                    .then(
+                        if (hasValidationErrors) {
+                            Modifier.border(2.dp, Color(0xFFD32F2F), RoundedCornerShape(12.dp))
+                        } else {
+                            Modifier
+                        }
+                    ),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = if (hasValidationErrors) Color(0xFFFFCDD2) else Color(0xFF00BCD4),
+                    contentColor = if (hasValidationErrors) Color(0xFFD32F2F) else MaterialTheme.colorScheme.surface
+                ),
                 shape = RoundedCornerShape(12.dp)
             ) {
                 Text(
                     text = "Guardar cambios",
                     fontSize = 16.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = Color.White
+                    fontWeight = FontWeight.SemiBold
                 )
             }
 
@@ -454,7 +561,7 @@ fun EditProfileScreen(
                     .height(56.dp),
                 shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.outlinedButtonColors(
-                    contentColor = Color(0xFF757575)
+                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             ) {
                 Text(
@@ -476,14 +583,16 @@ private fun EditProfileTextField(
     onValueChange: (String) -> Unit,
     placeholder: String = "",
     minLines: Int = 1,
-    enabled: Boolean = true
+    enabled: Boolean = true,
+    keyboardType: androidx.compose.ui.text.input.KeyboardType = androidx.compose.ui.text.input.KeyboardType.Text,
+    errorMessage: String? = null
 ) {
     Column(modifier = Modifier.fillMaxWidth()) {
         Text(
             text = label,
             fontSize = 14.sp,
             fontWeight = FontWeight.Normal,
-            color = Color(0xFF212121)
+            color = MaterialTheme.colorScheme.onSurface
         )
         Spacer(modifier = Modifier.height(8.dp))
         OutlinedTextField(
@@ -491,6 +600,10 @@ private fun EditProfileTextField(
             onValueChange = onValueChange,
             modifier = Modifier.fillMaxWidth(),
             enabled = enabled,
+            keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                keyboardType = keyboardType,
+                imeAction = androidx.compose.ui.text.input.ImeAction.Done
+            ),
             placeholder = {
                 Text(
                     text = placeholder,
@@ -499,19 +612,30 @@ private fun EditProfileTextField(
                 )
             },
             colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = Color(0xFF00BCD4),
-                unfocusedBorderColor = Color(0xFFE0E0E0),
+                focusedBorderColor = if (errorMessage != null) Color(0xFFD32F2F) else Color(0xFF00BCD4),
+                unfocusedBorderColor = if (errorMessage != null) Color(0xFFD32F2F) else Color(0xFFE0E0E0),
                 disabledBorderColor = Color(0xFFE0E0E0),
-                focusedContainerColor = Color(0xFFFAFAFA),
-                unfocusedContainerColor = Color(0xFFFAFAFA),
+                focusedContainerColor = MaterialTheme.colorScheme.background,
+                unfocusedContainerColor = MaterialTheme.colorScheme.background,
                 disabledContainerColor = Color(0xFFF5F5F5),
-                disabledTextColor = Color(0xFF757575)
+                disabledTextColor = MaterialTheme.colorScheme.onSurfaceVariant
             ),
             shape = RoundedCornerShape(12.dp),
             minLines = minLines,
             maxLines = if (minLines > 1) minLines else 1,
-            singleLine = minLines == 1
+            singleLine = minLines == 1,
+            isError = errorMessage != null
         )
+        
+        // Mostrar mensaje de error debajo del campo
+        if (errorMessage != null) {
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = errorMessage,
+                fontSize = 12.sp,
+                color = Color(0xFFD32F2F)
+            )
+        }
     }
 }
 

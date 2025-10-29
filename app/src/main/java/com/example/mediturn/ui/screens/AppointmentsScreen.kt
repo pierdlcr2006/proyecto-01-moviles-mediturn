@@ -142,7 +142,7 @@ fun AppointmentsScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFFAFAFA))
+            .background(MaterialTheme.colorScheme.background)
     ) {
         TopAppBar(
             title = {
@@ -150,7 +150,7 @@ fun AppointmentsScreen(
                     text = "Mis Citas",
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFF212121),
+                    color = MaterialTheme.colorScheme.onSurface,
                     textAlign = TextAlign.Center,
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -160,7 +160,7 @@ fun AppointmentsScreen(
                     Icon(
                         imageVector = Icons.Filled.ArrowBack,
                         contentDescription = "Volver",
-                        tint = Color(0xFF212121)
+                        tint = MaterialTheme.colorScheme.onSurface
                     )
                 }
             },
@@ -168,12 +168,12 @@ fun AppointmentsScreen(
                 // Spacer para equilibrar el navigationIcon y centrar el título
                 Spacer(modifier = Modifier.width(48.dp))
             },
-            colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
+            colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface)
         )
 
         TabRow(
             selectedTabIndex = pagerState.currentPage,
-            containerColor = Color.White,
+            containerColor = MaterialTheme.colorScheme.surface,
             contentColor = Color(0xFF00BCD4),
             indicator = { tabPositions ->
                 TabRowDefaults.Indicator(
@@ -196,7 +196,7 @@ fun AppointmentsScreen(
                             text = title,
                             fontSize = 16.sp,
                             fontWeight = if (pagerState.currentPage == index) FontWeight.Bold else FontWeight.Normal,
-                            color = if (pagerState.currentPage == index) Color(0xFF00BCD4) else Color(0xFF757575)
+                            color = if (pagerState.currentPage == index) Color(0xFF00BCD4) else MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 )
@@ -260,7 +260,7 @@ private fun AppointmentList(
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFFAFAFA))
+            .background(MaterialTheme.colorScheme.background)
             .padding(horizontal = 20.dp, vertical = 16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
@@ -293,7 +293,7 @@ private fun AppointmentCard(
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
@@ -321,7 +321,7 @@ private fun AppointmentCard(
                     Icon(
                         imageVector = Icons.Filled.Person,
                         contentDescription = "Doctor",
-                        tint = Color.White,
+                        tint = MaterialTheme.colorScheme.surface,
                         modifier = Modifier.size(24.dp)
                     )
                 }
@@ -337,13 +337,13 @@ private fun AppointmentCard(
                                 text = doctor?.let { "Dr. ${it.name} ${it.lastname}" } ?: "Doctor no disponible",
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = Color(0xFF212121)
+                                color = MaterialTheme.colorScheme.onSurface
                             )
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
                                 text = specialtyName.ifBlank { "Especialidad pendiente" },
                                 fontSize = 14.sp,
-                                color = Color(0xFF757575)
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                         
@@ -365,7 +365,7 @@ private fun AppointmentCard(
                         Text(
                             text = formatDate(appointment.dateTime),
                             fontSize = 13.sp,
-                            color = Color(0xFF757575)
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Icon(
@@ -377,7 +377,7 @@ private fun AppointmentCard(
                         Text(
                             text = formatTime(appointment.dateTime),
                             fontSize = 13.sp,
-                            color = Color(0xFF757575)
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
@@ -399,7 +399,7 @@ private fun AppointmentCard(
                             text = "Reprogramar",
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Medium,
-                            color = Color.White
+                            color = MaterialTheme.colorScheme.surface
                         )
                     }
 
@@ -413,7 +413,7 @@ private fun AppointmentCard(
                             text = "Cancelar",
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Medium,
-                            color = Color.White
+                            color = MaterialTheme.colorScheme.surface
                         )
                     }
                 }
@@ -465,7 +465,7 @@ private fun EmptyAppointmentsState(isUpcoming: Boolean) {
         Text(
             text = if (isUpcoming) "Agenda una nueva consulta desde la pantalla Buscar." else "Cuando completes una consulta, aparecerá aquí.",
             fontSize = 14.sp,
-            color = Color(0xFF757575)
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
     }
 }

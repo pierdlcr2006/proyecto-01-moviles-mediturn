@@ -15,13 +15,16 @@ import com.example.mediturn.ui.screens.NotificationsScreen
 import com.example.mediturn.ui.screens.ProfileScreen
 import com.example.mediturn.ui.screens.ScheduleAppointmentScreen
 import com.example.mediturn.ui.screens.SearchScreen
+import com.example.mediturn.ui.screens.SettingsScreen
 import com.example.mediturn.ui.screens.SpecialtiesScreen
 import com.example.mediturn.util.Destination
 
 @Composable
 fun NavGraph(
     navController: NavHostController,
-    viewModel: MediturnViewModel
+    viewModel: MediturnViewModel,
+    isDarkMode: Boolean,
+    onThemeChange: (Boolean) -> Unit
 ) {
     NavHost(
         navController = navController,
@@ -121,6 +124,14 @@ fun NavGraph(
             NotificationsScreen(
                 navController = navController,
                 viewModel = viewModel
+            )
+        }
+
+        composable(Destination.SETTINGS) {
+            SettingsScreen(
+                navController = navController,
+                isDarkMode = isDarkMode,
+                onThemeChange = onThemeChange
             )
         }
     }

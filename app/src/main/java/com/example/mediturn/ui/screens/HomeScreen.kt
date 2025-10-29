@@ -23,7 +23,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MedicalServices
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.PanTool
-import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Card
@@ -86,7 +86,7 @@ fun HomeScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFFAFAFA))
+            .background(MaterialTheme.colorScheme.background)
             .verticalScroll(rememberScrollState())
     ) {
         HeaderSection(
@@ -137,7 +137,7 @@ private fun HeaderSection(
             text = "MediTurn",
             fontSize = 28.sp,
             fontWeight = FontWeight.Bold,
-            color = Color(0xFF00BCD4),
+            color = MaterialTheme.colorScheme.primary,
             modifier = Modifier.align(Alignment.CenterHorizontally)
         )
 
@@ -153,7 +153,7 @@ private fun HeaderSection(
                     text = "Hola, $userName",
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFF212121)
+                    color = MaterialTheme.colorScheme.onBackground
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
@@ -195,7 +195,7 @@ private fun SpecialtiesSection(
             .fillMaxWidth()
             .padding(horizontal = 20.dp, vertical = 8.dp),
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         onClick = onSeeAll
     ) {
@@ -208,7 +208,7 @@ private fun SpecialtiesSection(
             Box(
                 modifier = Modifier
                     .size(60.dp)
-                    .background(color = Color(0xFFE0F7FA), shape = CircleShape),
+                    .background(color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f), shape = CircleShape),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
@@ -223,7 +223,7 @@ private fun SpecialtiesSection(
                 text = "Especialidades",
                 fontSize = 16.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = Color(0xFF212121)
+                color = MaterialTheme.colorScheme.onSurface
             )
         }
     }
@@ -288,7 +288,7 @@ private fun CarruselSection() {
         HorizontalPagerIndicator(
             pagerState = pagerState,
             modifier = Modifier.align(Alignment.CenterHorizontally),
-            activeColor = Color(0xFF212121),
+            activeColor = MaterialTheme.colorScheme.onSurface,
             inactiveColor = Color(0xFFBDBDBD),
             indicatorWidth = 8.dp,
             indicatorHeight = 8.dp,
@@ -307,7 +307,7 @@ private fun NextAppointmentCard(
             .fillMaxWidth()
             .padding(horizontal = 20.dp, vertical = 8.dp),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         if (appointment != null && doctor != null) {
@@ -331,13 +331,13 @@ private fun NextAppointmentCard(
                         text = "Próxima cita",
                         fontSize = 16.sp,
                         fontWeight = FontWeight.SemiBold,
-                        color = Color(0xFF212121)
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
                         text = "${doctor.name} ${doctor.lastname} – ${formatAppointmentDate(appointment.dateTime)}",
                         fontSize = 13.sp,
-                        color = Color(0xFF757575),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         lineHeight = 18.sp
                     )
                 }
@@ -363,13 +363,13 @@ private fun NextAppointmentCard(
                         text = "Próxima cita",
                         fontSize = 16.sp,
                         fontWeight = FontWeight.SemiBold,
-                        color = Color(0xFF212121)
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
                         text = "No tienes citas programadas",
                         fontSize = 13.sp,
-                        color = Color(0xFF757575)
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
@@ -384,7 +384,7 @@ private fun TipsCard() {
             .fillMaxWidth()
             .padding(horizontal = 20.dp, vertical = 8.dp),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Row(
@@ -407,13 +407,13 @@ private fun TipsCard() {
                     text = "Consejo del día",
                     fontSize = 16.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = Color(0xFF212121)
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = "Recuerda hidratarte y descansar bien antes de tu cita.",
                     fontSize = 13.sp,
-                    color = Color(0xFF757575),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     lineHeight = 18.sp
                 )
             }
@@ -435,7 +435,7 @@ private fun TopDoctorsSection(
             text = "Doctores destacados",
             fontSize = 18.sp,
             fontWeight = FontWeight.SemiBold,
-            color = Color(0xFF212121)
+            color = MaterialTheme.colorScheme.onSurface
         )
         Spacer(modifier = Modifier.height(12.dp))
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -454,7 +454,7 @@ private fun DoctorSummaryCard(
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
@@ -478,13 +478,13 @@ private fun DoctorSummaryCard(
                         text = "${doctor.name} ${doctor.lastname}",
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFF212121)
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
                         text = doctor.hospital,
                         fontSize = 13.sp,
-                        color = Color(0xFF757575)
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }

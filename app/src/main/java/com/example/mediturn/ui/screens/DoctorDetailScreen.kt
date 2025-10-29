@@ -76,7 +76,7 @@ fun DoctorDetailScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFFAFAFA))
+            .background(MaterialTheme.colorScheme.background)
     ) {
         TopAppBar(
             title = {
@@ -84,7 +84,7 @@ fun DoctorDetailScreen(
                     text = "Detalles del Doctor",
                     fontSize = 18.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = Color(0xFF212121),
+                    color = MaterialTheme.colorScheme.onSurface,
                     textAlign = androidx.compose.ui.text.style.TextAlign.Center,
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -94,7 +94,7 @@ fun DoctorDetailScreen(
                     Icon(
                         imageVector = Icons.Filled.ArrowBack,
                         contentDescription = "Volver",
-                        tint = Color(0xFF212121)
+                        tint = MaterialTheme.colorScheme.onSurface
                     )
                 }
             },
@@ -102,7 +102,7 @@ fun DoctorDetailScreen(
                 // Spacer para equilibrar el navigationIcon y centrar el título
                 Spacer(modifier = Modifier.width(48.dp))
             },
-            colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
+            colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface)
         )
 
         if (doctor == null) {
@@ -142,7 +142,7 @@ private fun DoctorDetailContent(
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
             elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
         ) {
             Column(
@@ -174,7 +174,7 @@ private fun DoctorDetailContent(
                     text = "${doctor.name} ${doctor.lastname}",
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFF212121)
+                    color = MaterialTheme.colorScheme.onSurface
                 )
 
                 Spacer(modifier = Modifier.height(6.dp))
@@ -193,7 +193,7 @@ private fun DoctorDetailContent(
                 Text(
                     text = doctor.hospital,
                     fontSize = 14.sp,
-                    color = Color(0xFF757575)
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
 
                 Spacer(modifier = Modifier.height(12.dp))
@@ -216,12 +216,12 @@ private fun DoctorDetailContent(
                         text = "${doctor.rating}",
                         fontSize = 15.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFF212121)
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
                         text = "(127 reseñas)",
                         fontSize = 13.sp,
-                        color = Color(0xFF757575)
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
 
@@ -240,7 +240,7 @@ private fun DoctorDetailContent(
                         text = "Agendar Cita",
                         fontSize = 16.sp,
                         fontWeight = FontWeight.SemiBold,
-                        color = Color.White
+                        color = MaterialTheme.colorScheme.surface
                     )
                 }
             }
@@ -252,7 +252,7 @@ private fun DoctorDetailContent(
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
             elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
         ) {
             Column(
@@ -268,7 +268,7 @@ private fun DoctorDetailContent(
                 Text(
                     text = doctor.about,
                     fontSize = 14.sp,
-                    color = Color(0xFF757575),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     lineHeight = 20.sp
                 )
             }
@@ -280,7 +280,7 @@ private fun DoctorDetailContent(
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
             elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
         ) {
             Column(
@@ -307,7 +307,7 @@ private fun DoctorDetailContent(
                         Text(
                             text = "No hay horarios disponibles",
                             fontSize = 14.sp,
-                            color = Color(0xFF757575)
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
@@ -328,7 +328,7 @@ private fun DoctorDetailContent(
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
             elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
         ) {
             Column(
@@ -381,7 +381,7 @@ private fun SectionWithIcon(
             text = title,
             fontSize = 16.sp,
             fontWeight = FontWeight.SemiBold,
-            color = Color(0xFF212121)
+            color = MaterialTheme.colorScheme.onSurface
         )
     }
 }
@@ -403,13 +403,13 @@ private fun AvailabilityRow(day: String, hours: String) {
             text = day,
             fontSize = 14.sp,
             fontWeight = FontWeight.Medium,
-            color = Color(0xFF212121),
+            color = MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.weight(1f)
         )
         Text(
             text = hours,
             fontSize = 13.sp,
-            color = Color(0xFF757575)
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
     }
 }
@@ -443,7 +443,7 @@ private fun TeleconsultationCard(
                 Icon(
                     imageVector = Icons.Filled.VideoCall,
                     contentDescription = "Teleconsulta",
-                    tint = Color.White,
+                    tint = MaterialTheme.colorScheme.surface,
                     modifier = Modifier.size(24.dp)
                 )
             }
@@ -459,7 +459,7 @@ private fun TeleconsultationCard(
                 Text(
                     text = if (available) "Servicio desde 9:00" else "Servicio no habilitado",
                     fontSize = 13.sp,
-                    color = Color(0xFF757575)
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
             if (available) {
@@ -487,7 +487,7 @@ private fun ContactInfoRow(
         Icon(
             imageVector = icon,
             contentDescription = null,
-            tint = Color(0xFF757575),
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.size(20.dp)
         )
         Column {
@@ -495,14 +495,14 @@ private fun ContactInfoRow(
                 text = text,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Medium,
-                color = Color(0xFF212121)
+                color = MaterialTheme.colorScheme.onSurface
             )
             if (subtitle != null) {
                 Spacer(modifier = Modifier.height(2.dp))
                 Text(
                     text = subtitle,
                     fontSize = 13.sp,
-                    color = Color(0xFF757575)
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
@@ -598,7 +598,7 @@ private fun EmptyDoctorState() {
         Text(
             text = "Intenta nuevamente desde la lista de doctores.",
             fontSize = 14.sp,
-            color = Color(0xFF757575)
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
     }
 }

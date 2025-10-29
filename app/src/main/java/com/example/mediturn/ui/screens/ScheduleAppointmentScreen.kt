@@ -123,7 +123,7 @@ fun ScheduleAppointmentScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color(0xFFFAFAFA))
+                .background(MaterialTheme.colorScheme.background)
         ) {
         TopAppBar(
             title = {
@@ -131,7 +131,7 @@ fun ScheduleAppointmentScreen(
                     text = if (isRescheduling) "Reprogramar Cita" else "Agendar Cita",
                     fontSize = 18.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = Color(0xFF212121),
+                    color = MaterialTheme.colorScheme.onSurface,
                     textAlign = TextAlign.Center,
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -141,7 +141,7 @@ fun ScheduleAppointmentScreen(
                     Icon(
                         imageVector = Icons.Filled.ArrowBack,
                         contentDescription = "Volver",
-                        tint = Color(0xFF212121)
+                        tint = MaterialTheme.colorScheme.onSurface
                     )
                 }
             },
@@ -149,7 +149,7 @@ fun ScheduleAppointmentScreen(
                 // Spacer para equilibrar el navigationIcon y centrar el título
                 Spacer(modifier = Modifier.width(48.dp))
             },
-            colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
+            colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface)
         )
 
         if (doctor == null) {
@@ -243,7 +243,7 @@ fun ScheduleAppointmentScreen(
                         Icon(
                             imageVector = Icons.Filled.CalendarToday,
                             contentDescription = "Seleccionar fecha",
-                            tint = Color(0xFF757575)
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 },
@@ -466,7 +466,7 @@ fun ScheduleAppointmentScreen(
                 Text(
                     text = "Tus datos están protegidos con MediTurn",
                     fontSize = 12.sp,
-                    color = Color(0xFF757575)
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
 
@@ -479,13 +479,13 @@ fun ScheduleAppointmentScreen(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(Color.White),
+                    .background(MaterialTheme.colorScheme.surface),
                 contentAlignment = Alignment.Center
             ) {
                 Card(
                     modifier = Modifier
                         .padding(32.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                     shape = RoundedCornerShape(24.dp),
                     elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
                 ) {
@@ -507,13 +507,13 @@ fun ScheduleAppointmentScreen(
                                 text = if (isRescheduling) "Reprogramando tu cita..." else "Procesando tu cita...",
                                 fontSize = 18.sp,
                                 fontWeight = FontWeight.SemiBold,
-                                color = Color(0xFF212121)
+                                color = MaterialTheme.colorScheme.onSurface
                             )
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(
                                 text = "Por favor espera un momento",
                                 fontSize = 14.sp,
-                                color = Color(0xFF757575)
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         } else if (showSuccess) {
                             // Mostrar check de éxito turquesa
@@ -528,13 +528,13 @@ fun ScheduleAppointmentScreen(
                                 text = if (isRescheduling) "¡Cita reprogramada!" else "¡Cita confirmada!",
                                 fontSize = 20.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = Color(0xFF212121)
+                                color = MaterialTheme.colorScheme.onSurface
                             )
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(
                                 text = if (isRescheduling) "Tu cita ha sido reprogramada exitosamente" else "Tu cita ha sido agendada exitosamente",
                                 fontSize = 14.sp,
-                                color = Color(0xFF757575),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 textAlign = TextAlign.Center
                             )
                         }
@@ -549,7 +549,7 @@ fun ScheduleAppointmentScreen(
 private fun DoctorSummaryCard(doctorName: String, specialty: String) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         shape = RoundedCornerShape(16.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
@@ -581,13 +581,13 @@ private fun DoctorSummaryCard(doctorName: String, specialty: String) {
                     text = doctorName,
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFF212121)
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = specialty,
                     fontSize = 14.sp,
-                    color = Color(0xFF757575)
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
@@ -688,7 +688,7 @@ private fun SectionHeader(
             text = title,
             fontSize = 15.sp,
             fontWeight = FontWeight.SemiBold,
-            color = Color(0xFF212121)
+            color = MaterialTheme.colorScheme.onSurface
         )
     }
 }
@@ -706,7 +706,7 @@ private fun ModalityChip(
             .height(48.dp)
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(12.dp),
-        color = if (selected) Color(0xFFE0F7FA) else Color.White,
+        color = if (selected) Color(0xFFE0F7FA) else MaterialTheme.colorScheme.surface,
         border = BorderStroke(
             width = if (selected) 2.dp else 1.dp,
             color = if (selected) Color(0xFF00BCD4) else Color(0xFFE0E0E0)
@@ -722,7 +722,7 @@ private fun ModalityChip(
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                tint = if (selected) Color(0xFF00BCD4) else Color(0xFF757575),
+                tint = if (selected) Color(0xFF00BCD4) else MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.size(20.dp)
             )
             Spacer(modifier = Modifier.width(8.dp))
@@ -730,7 +730,7 @@ private fun ModalityChip(
                 text = text,
                 fontSize = 14.sp,
                 fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
-                color = if (selected) Color(0xFF00838F) else Color(0xFF757575)
+                color = if (selected) Color(0xFF00838F) else MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }
@@ -748,7 +748,7 @@ private fun TimeChip(
             .height(48.dp)
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(12.dp),
-        color = if (selected) Color(0xFFE0F7FA) else Color.White,
+        color = if (selected) Color(0xFFE0F7FA) else MaterialTheme.colorScheme.surface,
         border = BorderStroke(
             width = if (selected) 2.dp else 1.dp,
             color = if (selected) Color(0xFF00BCD4) else Color(0xFFE0E0E0)
@@ -762,7 +762,7 @@ private fun TimeChip(
                 text = "${timeSlot.start}-${timeSlot.end}",
                 fontSize = 14.sp,
                 fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
-                color = if (selected) Color(0xFF00838F) else Color(0xFF757575)
+                color = if (selected) Color(0xFF00838F) else MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }
@@ -787,7 +787,7 @@ private fun EmptyScheduleState() {
         Text(
             text = "Regresa y selecciona nuevamente el doctor.",
             fontSize = 14.sp,
-            color = Color(0xFF757575)
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
     }
 }
