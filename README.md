@@ -167,11 +167,15 @@ com.mediturn.app/
 
 **Rutas configuradas:**
 - `/home` - Pantalla principal
+- `/search` - Busqueda
+- `/profile` - Perfil del usuario
+- `/edit_profile` - Editar perfil del usuario
 - `/doctors` - Listado de médicos
 - `/doctor_detail/{id}` - Detalle del médico
+- `/appointments` - Mis citas
 - `/schedule_appointment` - Agendar cita
-- `/my_appointments` - Mis citas
-- `/profile` - Perfil del usuario
+- `/notifications` - Notificaciones
+- `/settings` - Configuraciones
 
 ---
 
@@ -233,19 +237,6 @@ Se implementó **Material Design 3** para lograr una apariencia moderna y consis
 - ✓ Componentes con esquinas redondeadas
 - ✓ Iconografía coherente
 
-**Componentes reutilizables:**
-```kotlin
-@Composable
-fun DoctorCard(doctor: Doctor, onClick: () -> Unit)
-
-@Composable
-fun AppointmentCard(appointment: Appointment)
-
-@Composable
-fun CustomSearchBar(query: String, onQueryChange: (String) -> Unit)
-```
-
----
 
 ## ✅ Pruebas y Validaciones (Testing)
 
@@ -319,30 +310,42 @@ Se implementaron los siguientes modelos principales:
 
 | Modelo | Propósito | Campos Principales |
 |--------|-----------|-------------------|
-| **Doctor** | Información del médico | `id`, `name`, `specialty`, `city`, `isTeleconsultAvailable`, `rating` |
-| **Slot** | Horarios disponibles | `id`, `doctorId`, `dateTime`, `isAvailable` |
-| **Appointment** | Datos de las citas | `id`, `doctorId`, `patientId`, `dateTime`, `reason`, `status` |
-| **Patient** | Información del usuario | `id`, `name`, `email`, `phone`, `age` |
+| **DoctorEntity** | Información del médico | `id`, `name`, `lastname`, `specialtyId`, `hospital`, `location`, `rating`, `hasTeleconsultation` |
+| **SlotEntity** | Horarios disponibles para UI | `time`, `isAvailable`, `reason` |
+| **Appointment** | Datos de las citas | `id`, `doctorId`, `patientId`, `dateTime`, `status`, `consultationType`, `reason`, `rescheduleCount` |
+| **PatientEntity** | Información del usuario | `id`, `fullName`, `email`, `phone`, `address`, `profileImageUrl` |
 
 ### Estructura de Ejemplo
 
 ```kotlin
-data class Doctor(
-    val id: Long,
+data class DoctorEntity(
+    @PrimaryKey(autoGenerate = true)
+    val id: Long = 0L,
     val name: String,
-    val specialty: String,
-    val city: String,
-    val isTeleconsultAvailable: Boolean,
-    val rating: Float
+    val lastname: String,
+    val specialtyId: Long,
+    val hospital: String,
+    val location: String,
+    val rating: Double,
+    val profileImageUrl: String,
+    val about: String,
+    val phone: String,
+    val availability: List<DayAvailability>,
+    val timeSlot: List<TimeSlot>,
+    val hasTeleconsultation: Boolean
 )
 
 data class Appointment(
-    val id: Long,
+    @PrimaryKey(autoGenerate = true)
+    val id: Long = 0L,
     val doctorId: Long,
     val patientId: Long,
-    val dateTime: Long,
-    val reason: String,
-    val status: AppointmentStatus
+    val dateTime: Long, // Timestamp en milisegundos
+    val status: AppointmentStatus,
+    val isPast: Boolean,
+    val consultationType: String = "Presencial", // "Presencial" o "Teleconsulta"
+    val reason: String = "",
+    val rescheduleCount: Int = 0
 )
 ```
 
@@ -352,75 +355,57 @@ data class Appointment(
 
 Se implementó un repositorio local mediante una fuente de datos embebida (DataSource) que simula la información de médicos y citas.
 
-### Funcionalidades Implementadas
+### Funcionalidades del Repository
 
-| Función | Descripción |
-|---------|-------------|
-| `getAllDoctors()` | Retorna lista completa de médicos simulados |
-| `searchDoctorsByName(query)` | Búsqueda dinámica por nombre |
-| `filterBySpecialty(specialty)` | Filtrado por especialidad médica |
-| `getDoctorById(id)` | Obtiene detalles de un médico específico |
-| `getAvailableSlots(doctorId)` | Retorna horarios disponibles |
-| `createAppointment()` | Simula la creación de una cita |
-| `getPatientAppointments(patientId)` | Lista de citas del paciente |
+| Categoría | Función | Descripción |
+|-----------|---------|-------------|
+| **Doctores** | `observeDoctors()` | Flow de lista completa de médicos |
+| | `observeDoctor(doctorId)` | Flow de detalles de un médico |
+| | `observeTopDoctors(limit)` | Flow de médicos mejor calificados |
+| **Citas** | `scheduleAppointment()` | Crea nueva cita con validaciones |
+| | `observeUpcomingAppointments()` | Flow de citas próximas |
+| | `observePastAppointments()` | Flow de citas pasadas |
+| | `updateAppointment()` | Reprograma cita existente |
+| | `deleteAppointment()` | Cancela/elimina cita |
+| **Validaciones** | `hasTimeConflict()` | Detecta solapes de horario (1 hora) |
+| | `canRescheduleAppointment()` | Valida reglas de reprogramación |
+| **Paciente** | `observePatient()` | Flow de datos del paciente |
+| | `updatePatient()` | Actualiza perfil del paciente |
+| **Especialidades** | `observeSpecialties()` | Flow de especialidades médicas |
 
-### Ejemplo de Datos Simulados
-
-```kotlin
-object DoctorDataSource {
-    val doctors = listOf(
-        Doctor(1, "Dr. García", "Cardiología", "Lima", true, 4.8f),
-        Doctor(2, "Dra. Martínez", "Pediatría", "Lima", false, 4.9f),
-        Doctor(3, "Dr. López", "Dermatología", "Callao", true, 4.7f)
-    )
-}
-```
-
----
-
-## Integración UI - Datos
-
-Se conectó el repositorio con las pantallas de UI mediante el patrón Repository:
-
-**Flujo de datos implementado:**
-```
-ViewModel → Repository → DataSource → UI
-```
-
-**Ejemplo de uso:**
-```kotlin
-@Composable
-fun DoctorsListScreen(viewModel: MediTurnViewModel) {
-    val doctors by viewModel.doctors.collectAsState()
-    
-    LazyColumn {
-        items(doctors) { doctor ->
-            DoctorCard(doctor = doctor)
-        }
-    }
-}
-```
-
----
 
 ## Búsqueda Dinámica Implementada
-
 Se implementó búsqueda en tiempo real con las siguientes características:
+- ✓ Búsqueda por nombre completo del médico (nombre + apellido)
+- ✓ Búsqueda por nombre de especialidad
+- ✓ Filtrado dinámico por especialidad mediante diálogo
+- ✓ Actualización inmediata de resultados usando `remember` y `State`
+- ✓ Manejo de estado vacío con mensaje personalizado
 
-- ✓ Búsqueda por nombre de médico
-- ✓ Filtrado por especialidad
-- ✓ Actualización inmediata de resultados
-- ✓ Manejo de estado vacío
-
-**Lógica de búsqueda:**
+**Implementación técnica:**
+La búsqueda se realiza en `SearchScreen.kt` mediante filtrado reactivo:
 ```kotlin
-fun searchDoctors(query: String) {
-    _doctors.value = if (query.isEmpty()) {
-        repository.getAllDoctors()
-    } else {
-        repository.searchDoctorsByName(query)
+val filteredDoctors = remember(searchText, selectedSpecialtyId, doctors) {
+    doctors.filter { doctor ->
+        val matchesSpecialty = selectedSpecialtyId?.let { 
+            doctor.specialtyId == it 
+        } ?: true
+        
+        val matchesText = searchText.isBlank() ||
+            "${doctor.name} ${doctor.lastname}".contains(searchText, ignoreCase = true) ||
+            specialty.name.contains(searchText, ignoreCase = true)
+            
+        matchesSpecialty && matchesText
     }
 }
+
+```
+
+**Características adicionales:**
+- Búsqueda case-insensitive
+- Filtro combinado (texto + especialidad)
+- Botón de "Limpiar filtro" para resetear búsqueda
+- Búsqueda en tiempo real sin necesidad de botón "Buscar"
 ```
 
 ---
@@ -442,29 +427,63 @@ Se simuló el flujo completo desde la selección del médico hasta la confirmaci
 
 ## ✅ Pruebas y Validaciones (Testing)
 
-Para garantizar la correcta integración de la lógica con la interfaz, se realizaron pruebas manuales:
+Se realizó verificación manual exhaustiva para garantizar el correcto funcionamiento:
 
-| Área | Validación | Resultado |
-|------|------------|-----------|
-| **Carga de Datos** | Datos del repositorio se muestran correctamente en UI | ✅ Correcto |
-| **Búsqueda** | Funcionamiento del buscador por nombre y especialidad | ✅ Correcto |
-| **Filtrado** | Filtros actualizan la lista en tiempo real | ✅ Correcto |
-| **Flujo de Reserva** | Simulación completa de reserva de cita | ✅ Correcto |
-| **Estados** | Manejo de estados (pendiente, confirmada) | ✅ Correcto |
-| **Navegación** | Coherencia entre detalle y reserva | ✅ Correcto |
+| Funcionalidad | Estado | Observaciones |
+|---------------|--------|---------------|
+| **Carga de Datos** | ✅ Validado | Los datos del repositorio se cargan correctamente desde Room Database mediante `seedDatabaseIfEmpty()` |
+| **Búsqueda en Tiempo Real** | ✅ Validado | El filtrado se ejecuta instantáneamente con cada cambio en el texto de búsqueda |
+| **Filtro por Especialidad** | ✅ Validado | El diálogo de filtros permite seleccionar especialidades y combinar con búsqueda de texto |
+| **Navegación Detalle→Reserva** | ✅ Validado | El flujo completo desde lista de doctores hasta confirmación funciona sin errores |
+| **Estados de Cita** | ✅ Validado | Las citas muestran correctamente los estados: CONFIRMED, RESCHEDULED, CANCELLED, COMPLETED |
+| **Validaciones de Reserva** | ✅ Validado | Se validan conflictos de horario, límite de reprogramaciones y ventana de 4 horas |
 
-**Los tests confirmaron que el sistema responde correctamente y mantiene la coherencia entre datos simulados e interfaz.**
+**Nota:** La verificación se realizó mediante ejecución manual de la aplicación en emulador/dispositivo, sin uso de frameworks de testing automatizado (JUnit, Espresso).
 
 ---
 
 ## Entregables
 
-1. ✅ Modelos de datos implementados (Doctor, Slot, Appointment, Patient)
-2. ✅ Repositorio local con datos simulados
-3. ✅ Búsqueda funcional por especialidad y nombre
-4. ✅ Filtrado dinámico en tiempo real
-5. ✅ Flujo completo de reserva de cita simulada
-6. ✅ Integración UI-Datos funcional
+1. ✅ **Modelos de datos implementados:**
+   - `DoctorEntity.kt`: Entidad con información completa del médico
+   - `TimeSlot.kt`: Modelo para horarios disponibles
+   - `Appointment.kt`: Entidad de citas con estados y timestamps
+   - `PatientEntity.kt`: Información del paciente
+   - `EspecialityEntity.kt`: Catálogo de especialidades médicas
+
+2. ✅ **Repositorio local con datos simulados:**
+   - `MediturnRepository.kt` con funciones de seed:
+     - `seedPatients()`: Crea paciente por defecto
+     - `seedSpecialties()`: 5 especialidades médicas
+     - `seedDoctors()`: 7 doctores con horarios y disponibilidad
+     - `seedAppointments()`: Citas de ejemplo (confirmadas, pasadas, reprogramadas)
+     - `seedNotifications()`: Notificaciones de recordatorio
+
+3. ✅ **Búsqueda funcional por especialidad y nombre:**
+   - Implementada en `SearchScreen.kt` líneas 43-53
+   - Búsqueda combinada: texto (nombre/apellido/especialidad) + filtro de especialidad
+   - Case-insensitive y reactiva
+
+4. ✅ **Filtrado dinámico en tiempo real:**
+   - Uso de `remember()` con keys múltiples para recomposición eficiente
+   - Actualización inmediata sin lag perceptible
+   - Diálogo de filtros con chips seleccionables
+
+5. ✅ **Flujo completo de reserva de cita:**
+   - Navegación: `HomeScreen` → `DoctorDetailScreen` → `ScheduleAppointmentScreen` → `AppointmentsScreen`
+   - Validaciones de negocio implementadas en `MediturnRepository`
+   - Estados de loading y éxito con animaciones
+
+6. ✅ **Integración UI-Datos funcional mediante arquitectura MVVM:**
+   - **Capa de Datos**: Room Database + DAOs (`DoctorDao`, `AppointmentDao`, etc.)
+   - **Repository**: `MediturnRepository` gestiona lógica de negocio y acceso a datos
+   - **ViewModel**: `MediturnViewModel` expone `StateFlow` para observación reactiva
+   - **UI**: Screens en Jetpack Compose observan datos con `collectAsStateWithLifecycle()`
+   - **Navegación**: `NavGraph.kt` implementa navegación con paso seguro de parámetros
+   
+   **Flujo de datos:**
+```
+   Room DB → DAOs → Repository → ViewModel (StateFlow) → UI (Compose State)
 
 ---
 
